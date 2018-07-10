@@ -1,8 +1,11 @@
 #include "marstd.cpp"
-#include "../util/SOpenGL.h"
+#include "../Util/SOpenGL.h"
+#include "framework.h"
 
 static CVector position;
 static CVector rotation;
+
+static CVector positionForRender;
 
 static void renderBsp(CBsp* bsp);
 static void renderPoly(CPoly* poly);
@@ -10,6 +13,11 @@ static void renderPoly(CPoly* poly);
 int main(int argc, char* argv[])
 {
 
+	framework.enableDepthBuffer = true;
+	
+	if (!framework.init(0, nullptr, 640, 480))
+		exit(-1);
+	
 	CMesh A;
 	CMesh B;
 	CMesh C;
@@ -86,40 +94,34 @@ int main(int argc, char* argv[])
 
 	printf("Generating BSP trees for CSG results...");
 
-	#if 0
 	csgA.split();
 	csgB.split();
 	csgC.split();
-	#endif
 
 	printf("[done]\n");
 
-	allegro_init();
-	install_keyboard();
-	install_mouse();
-
-	SOpenGL::I().setGraphicsMode(640, 480, 32, false);
-
 	position[2] = 4.0;
 
-	while (!key[KEY_ESC])
+	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
-
+	
+		framework.process();
+		
 		static float t = 0.0;
 
-		if (key[KEY_LEFT])
-			position[0] += 0.05;
-		if (key[KEY_RIGHT])
+		if (keyboard.isDown(SDLK_LEFT))
 			position[0] -= 0.05;
+		if (keyboard.isDown(SDLK_RIGHT))
+			position[0] += 0.05;
 
-		if (key[KEY_A])
+		if (keyboard.isDown(SDLK_a))
 			position[1] += 0.05;
-		if (key[KEY_Z])
+		if (keyboard.isDown(SDLK_z))
 			position[1] -= 0.05;
 
-		if (key[KEY_DOWN])
+		if (keyboard.isDown(SDLK_DOWN))
 			position[2] += 0.05;
-		if (key[KEY_UP])
+		if (keyboard.isDown(SDLK_UP))
 			position[2] -= 0.05;
 
 		rotation[0] = t * 10.0;
@@ -128,27 +130,20 @@ int main(int argc, char* argv[])
 
 		static int render = 0;
 
-		while (keypressed())
-		{
-
-			int c = readkey() >> 8;
-
-			if (c == KEY_1)
-				render = 0;
-			if (c == KEY_2)
-				render = 1;
-			if (c == KEY_3)
-				render = 2;
-			if (c == KEY_4)
-				render = 3;
-			if (c == KEY_5)
-				render = 4;
-			if (c == KEY_6)
-				render = 5;
-
-		}
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (keyboard.wentDown(SDLK_1))
+			render = 0;
+		if (keyboard.wentDown(SDLK_2))
+			render = 1;
+		if (keyboard.wentDown(SDLK_3))
+			render = 2;
+		if (keyboard.wentDown(SDLK_4))
+			render = 3;
+		if (keyboard.wentDown(SDLK_5))
+			render = 4;
+		if (keyboard.wentDown(SDLK_6))
+			render = 5;
+		
+		framework.beginDraw(0, 0, 0, 0);
 
 		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_DEPTH_TEST);
@@ -156,13 +151,16 @@ int main(int argc, char* argv[])
 
 		SOpenGL::I().setupStandardMatrices(0.0);
 
-		glTranslatef(-position[0], -position[1], -position[2]);
-		glRotatef(t * 10.0, 1.0, 0.0, 0.0);
-		glRotatef(t * 10.0, 0.0, 1.0, 0.0);
-		glRotatef(t * 10.0, 0.0, 0.0, 1.0);
+		gxTranslatef(-position[0], -position[1], -position[2]);
+		
+		const Mat4x4 r = Mat4x4(true).RotateX(DEG2RAD(t * 10.f)).RotateY(DEG2RAD(t * 10.f)).RotateZ(DEG2RAD(t * 10.f));
+		gxMultMatrixf(r.m_v);
+		
+		const Mat4x4 m = r.CalcInv();
+		const Vec3 p = m.Mul4(Vec3(position[0], position[1], position[2]));
+		positionForRender = CVector(p[0], p[1], p[2]);
 
-		glBlendFunc(GL_SRC_COLOR, GL_DST_COLOR);
-		glEnable(GL_BLEND);
+		setBlend(BLEND_ALPHA);
 
 		if (render == 0)
 			renderBsp(&bspA);
@@ -182,7 +180,7 @@ int main(int argc, char* argv[])
 		if (render == 5)
 			renderBsp(&csgC);
 
-		SOpenGL::I().flip();
+		framework.endDraw();
 
 		t += 0.01;
 
@@ -191,7 +189,6 @@ int main(int argc, char* argv[])
 	return 0;
 
 }
-END_OF_MAIN();
 
 static void doRenderBsp(CBsp* bsp)
 {
@@ -203,7 +200,7 @@ static void doRenderBsp(CBsp* bsp)
 	}
 	else
 	{
-		float d = bsp->plane * position;
+		float d = bsp->plane * positionForRender;
 		if (d >= 0.0)
 		{
 			doRenderBsp(bsp->child[1]);
@@ -235,19 +232,19 @@ static void renderPoly(CPoly* poly)
 	float tmp[3];
 	for (int i = 0; i < 3; ++i)
 		tmp[i] = (poly->plane.normal[i] + 1.0) * 0.5;
-	glColor3fv(tmp);
+	setColorf(tmp[0], tmp[1], tmp[2], .54f);
 
-	glBegin(GL_POLYGON);
+	gxBegin(GL_TRIANGLE_FAN);
 	{
 
 		for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
 		{
 
-			glVertex3f(edge->p[0], edge->p[1], edge->p[2]);
+			gxVertex3f(edge->p[0], edge->p[1], edge->p[2]);
 
 		}
 
 	}
-	glEnd();
+	gxEnd();
 
 }

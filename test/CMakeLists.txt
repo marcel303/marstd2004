@@ -15,9 +15,13 @@ project(marstd2004-examples)
 
 # --- marstd2004-examples ---
 
+set(source_csg3d CCsg3D/main.cpp)
 set(source_geomcompiler CGeomCompiler/main.cpp)
 
+add_executable(CCsg3D ${source_csg3d})
 add_executable(CGeomCompiler ${source_geomcompiler})
 
 set(libs marstd2004 framework ${FRAMEWORK_LIBRARIES})
+
+target_link_libraries(CCsg3D ${libs})
 target_link_libraries(CGeomCompiler ${libs})
