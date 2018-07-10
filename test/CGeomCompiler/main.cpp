@@ -1,7 +1,6 @@
-#include <allegro.h>
 #include "marstd.cpp"
-#include "../util/SOpenGL.h"
-#include "../util/SOpenGLTextureManager.h"
+#include "../Util/SOpenGL.h"
+#include "framework.h"
 
 static void generateTextureCoordinates(CMesh& mesh);
 static void generateTextureCoordinates(CPoly& poly);
@@ -9,9 +8,9 @@ static void generateTextureCoordinates(CPoly& poly);
 int main(int argc, char* argv[])
 {
 
-	allegro_init();
+	framework.enableDepthBuffer = true;
 	
-	if (install_keyboard() < 0)
+	if (!framework.init(0, nullptr, 640, 480))
 		exit(-1);
 		
 	CMesh mesh, mesh2;
@@ -31,9 +30,9 @@ int main(int argc, char* argv[])
 	CGeomCompiler::I().compile(mesh, base, compiledMesh);
 	CGeomCompiler::I().compile(mesh2, base, compiledMesh2);
 	
-	printf("vertex_count: %d\n", base.vertex.size());
-	printf("edge_count: %d\n", base.edge.size());
-	printf("poly_count: %d\n", base.polygon.size());
+	printf("vertex_count: %lu\n", base.vertex.size());
+	printf("edge_count: %lu\n", base.edge.size());
+	printf("poly_count: %lu\n", base.polygon.size());
 	
 	#if 0
 	for (int i = 0; i < base.vertex.size(); ++i)
@@ -74,20 +73,18 @@ int main(int argc, char* argv[])
 	
 //	readkey();
 	
-	if (SOpenGL::I().setGraphicsMode(640, 480, desktop_color_depth(), false) < 0)
-		exit(-1);
-
-	GLuint texturemap = SOpenGLTextureManager::I().addTextureFromFile("../data/texture1.bmp");
+	GLuint texturemap = getTexture("../data/texture1.bmp");
 
 	if (texturemap == 0)
 		exit(-1);
 
   	float time = 0.0;
   	
-	while (!key[KEY_ESC])
+	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
-	
-  		if (key[KEY_R])
+		framework.process();
+		
+  		if (keyboard.isDown(SDLK_r))
   		{
   		
   			CMesh mesh;
@@ -114,7 +111,7 @@ int main(int argc, char* argv[])
 			
 		}
 	
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		framework.beginDraw(100, 100, 100, 0);
 		
 		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_DEPTH_TEST);
@@ -125,14 +122,14 @@ int main(int argc, char* argv[])
 		
 		SOpenGL::I().setupStandardMatrices();
 		
-		glRotatef(time / 1.123, 1.0, 0.0, 0.0);
-		glRotatef(time / 1.234, 0.0, 1.0, 0.0);
-		glRotatef(time / 1.345, 0.0, 0.0, 1.0);
+		gxRotatef(time / 1.123, 1.0, 0.0, 0.0);
+		gxRotatef(time / 1.234, 0.0, 1.0, 0.0);
+		gxRotatef(time / 1.345, 0.0, 0.0, 1.0);
 
 		GLfloat matrix[16];
-		glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		gxGetMatrixf(GL_MODELVIEW, matrix);
+		gxMatrixMode(GL_MODELVIEW);
+		gxLoadIdentity();
 		
 		#if 0
 		
@@ -154,13 +151,12 @@ int main(int argc, char* argv[])
 		
 		// Polygons.
 
-		glBindTexture(GL_TEXTURE_2D, texturemap);
-		glEnable(GL_TEXTURE_2D);
-
+		gxSetTexture(texturemap);
+		
 		for (int i = 0; i < (int)compiledMesh.polygonIndex.size(); ++i)
 		{
-			glColor3ub(255, 255, 255);
-      		glBegin(GL_POLYGON);
+			gxColor3ub(255, 255, 255);
+      		gxBegin(GL_TRIANGLE_FAN);
       		{
       			int p = compiledMesh.polygonIndex[i];
       			for (int j = 0; j < (int)base.polygon[p].vertex.size(); ++j)
@@ -191,21 +187,21 @@ int main(int argc, char* argv[])
       						n_t[i] += n[j] * matrix[i + j * 4];
       					}
       				}
-//   					glColor3fv(n);
-					glTexCoord2f(base.texcoord[base.polygon[p].texcoord[j]].t[0], base.texcoord[base.polygon[p].texcoord[j]].t[1]);
-      				glNormal3fv(n_t);
-      				glVertex4fv(v_t);
+//   					gxColor3fv(n);
+					gxTexCoord2f(base.texcoord[base.polygon[p].texcoord[j]].t[0], base.texcoord[base.polygon[p].texcoord[j]].t[1]);
+      				gxNormal3fv(n_t);
+      				gxVertex4fv(v_t);
       			}
       		}
-      		glEnd();
+      		gxEnd();
 		}
 
-		glDisable(GL_TEXTURE_2D);
+		gxSetTexture(0);
 		
  		// Normals at vertices.
 
-  		glColor3ub(0, 255, 0);
-  		glBegin(GL_LINES);
+  		gxColor3ub(0, 255, 0);
+  		gxBegin(GL_LINES);
   		{
   			for (int i = 0; i < (int)base.vertex.size(); ++i)
   			{
@@ -235,16 +231,16 @@ int main(int argc, char* argv[])
   						v2_t[i] += v2[j] * matrix[i + j * 4];
   					}
   				}
-  				glVertex4fv(v1_t);
-  				glVertex4fv(v2_t);
+  				gxVertex4fv(v1_t);
+  				gxVertex4fv(v2_t);
   			}
   		}
-  		glEnd();
+  		gxEnd();
   		
 		// Polygon normals.
 
-  		glColor3ub(0, 0, 255);
-  		glBegin(GL_LINES);
+  		gxColor3ub(0, 0, 255);
+  		gxBegin(GL_LINES);
   		{
   			for (int i = 0; i < (int)base.polygon.size(); ++i)
   			{
@@ -274,13 +270,13 @@ int main(int argc, char* argv[])
   						v2_t[i] += v2[j] * matrix[i + j * 4];
   					}
   				}
-  				glVertex4fv(v1_t);
-  				glVertex4fv(v2_t);
+  				gxVertex4fv(v1_t);
+  				gxVertex4fv(v2_t);
   			}
   		}
-  		glEnd();
+  		gxEnd();
 		
-		SOpenGL::I().flip();
+		framework.endDraw();
 		
 		time += 1.0 / 10.0;
 	
@@ -288,7 +284,7 @@ int main(int argc, char* argv[])
 
 	return 0;
 
-} END_OF_MAIN();
+}
 
 static void generateTextureCoordinates(CMesh& mesh)
 {
@@ -322,11 +318,11 @@ static void generateTextureCoordinates(CPoly& poly)
 	// Find best texture plane.
 
 	int plane;
-	if (ABS(poly.plane.normal[0]) > ABS(poly.plane.normal[1]))
+	if (std::abs(poly.plane.normal[0]) > std::abs(poly.plane.normal[1]))
 		plane = 0;
 	else
 		plane = 1;
-	if (ABS(poly.plane.normal[2]) > ABS(poly.plane.normal[plane]))
+	if (std::abs(poly.plane.normal[2]) > std::abs(poly.plane.normal[plane]))
 		plane = 2;
 
 	for (CEdge* edge = poly.edgeHead; edge; edge = edge->next)
