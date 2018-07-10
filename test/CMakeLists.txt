@@ -19,11 +19,13 @@ set(source_bsp CBsp/main.cpp)
 set(source_csg3d CCsg3D/main.cpp)
 set(source_csg3ds CCsg3Ds/main.cpp)
 set(source_geomcompiler CGeomCompiler/main.cpp)
+set(source_isosurface CIsosurface/main.cpp)
 
 add_executable(CBsp ${source_bsp})
 add_executable(CCsg3D ${source_csg3d})
 add_executable(CCsg3Ds ${source_csg3ds})
 add_executable(CGeomCompiler ${source_geomcompiler})
+add_executable(CIsosurface ${source_isosurface})
 
 set(libs marstd2004 framework ${FRAMEWORK_LIBRARIES})
 
@@ -31,3 +33,4 @@ target_link_libraries(CBsp ${libs})
 target_link_libraries(CCsg3D ${libs})
 target_link_libraries(CCsg3Ds ${libs})
 target_link_libraries(CGeomCompiler ${libs})
+target_link_libraries(CIsosurface ${libs})
