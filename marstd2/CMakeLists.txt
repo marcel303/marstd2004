@@ -20,3 +20,5 @@ set_source_files_properties(${source} PROPERTIES HEADER_FILE_ONLY FALSE)
 source_group("sources" FILES ${source} ${other})
 
 add_library(marstd2004 ${source} ${other})
+
+target_include_directories(marstd2004 PUBLIC "${PROJECT_SOURCE_DIR}")
