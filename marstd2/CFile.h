@@ -19,7 +19,6 @@
 
 // NOTE: File closes automatically when leaving scope.
 
-#include <io.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -145,7 +144,7 @@ class CFile
 		va_start(ap, format);
 		vsprintf(text, format, ap);
 		va_end(ap);
-		if (fprintf(f, text) <= 0)
+		if (fprintf(f, "%s", text) <= 0)
 			return false;
 		return true;		
  	}
@@ -180,7 +179,11 @@ class CFile
 	{
 		if (!opened())
 			return -1;
-		return filelength(fileno(f));		 	
+		const size_t p = ftell(f);
+		fseek(f, 0, SEEK_END);
+		const int result = ftell(f);
+		fseek(f, p, SEEK_SET);
+		return result;
  	}
 
 };
