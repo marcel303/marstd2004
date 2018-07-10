@@ -47,29 +47,22 @@ TODO: Calculate portals.
 
   	float time = 0.0;
   	
-  	position[2] = 2.0;
+  	Camera3d camera;
+  	
+  	camera.position[2] = 2.f;
+  	camera.yaw = 180.f;
   	
 	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
 
 		framework.process();
 		
+		camera.tick(framework.timeStep, true);
+		position = CVector(camera.position[0], camera.position[1], camera.position[2]);
+		
 		point[0] = sin(time / 10.111) * 0.75;
 		point[1] = sin(time / 10.333) * 0.75;
 		point[2] = sin(time / 10.555) * 0.75;
-		
-		if (keyboard.isDown(SDLK_LEFT))
-			position[0] -= 0.01;
-		if (keyboard.isDown(SDLK_RIGHT))
-			position[0] += 0.01;
-		if (keyboard.isDown(SDLK_a))
-			position[1] += 0.01;
-		if (keyboard.isDown(SDLK_z))
-			position[1] -= 0.01;
-		if (keyboard.isDown(SDLK_UP))
-			position[2] -= 0.01;
-		if (keyboard.isDown(SDLK_DOWN))
-			position[2] += 0.01;
 
   		if (keyboard.isDown(SDLK_r))
   		{
@@ -103,9 +96,9 @@ TODO: Calculate portals.
 		framework.beginDraw(0, 0, 0, 0);
 		setBlend(BLEND_OPAQUE);
 		
-		SOpenGL::I().setupStandardMatrices(0.0);
-		gxRotatef(ry, 0.0, 1.0, 0.0);
-		gxTranslatef(-position[0], -position[1], -position[2]);
+		SOpenGL::I().setupStandardMatrices(0.0, false);
+		
+		camera.pushViewMatrix();
 
 		if (keyboard.isDown(SDLK_w))
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -137,6 +130,8 @@ TODO: Calculate portals.
 		render(pointMesh, 1.f);
 		
 		gxPopMatrix();
+		
+		camera.popViewMatrix();
 
 		framework.endDraw();
 
@@ -184,7 +179,10 @@ static void render(CBsp& bsp)
 	{
 
 		if (!inBspArray)
-			setColorf(poly->plane.normal[0], poly->plane.normal[1], poly->plane.normal[2]);
+			setColorf(
+				(poly->plane.normal[0] + .4f) / 1.4f,
+				(poly->plane.normal[1] + .4f) / 1.4f,
+				(poly->plane.normal[2] + .4f) / 1.4f);
 		
 		gxBegin(GL_TRIANGLE_FAN);
 		{
@@ -216,9 +214,9 @@ static void render(CCompiledMesh& mesh, float opacity)
 			{
 			
 				setColorf(
-					mesh.vertex[mesh.polygon[i].vertex[j]].plane.normal[0],
-					mesh.vertex[mesh.polygon[i].vertex[j]].plane.normal[1],
-					mesh.vertex[mesh.polygon[i].vertex[j]].plane.normal[2],
+					(mesh.vertex[mesh.polygon[i].vertex[j]].plane.normal[0] + .4f) / 1.4f,
+					(mesh.vertex[mesh.polygon[i].vertex[j]].plane.normal[1] + .4f) / 1.4f,
+					(mesh.vertex[mesh.polygon[i].vertex[j]].plane.normal[2] + .4f) / 1.4f,
 					opacity);
 				gxVertex3fv(mesh.vertex[mesh.polygon[i].vertex[j]].p);
 

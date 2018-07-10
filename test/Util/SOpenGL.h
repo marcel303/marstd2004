@@ -24,7 +24,7 @@ class SOpenGL
 
     public:
 
-	void setupStandardMatrices(float z = -2.0);
+	void setupStandardMatrices(float z = -2.0, bool invertZ = true);
     
 };
 
@@ -38,11 +38,12 @@ SOpenGL::~SOpenGL()
 
 }
 
-void SOpenGL::setupStandardMatrices(float z)
+void SOpenGL::setupStandardMatrices(float z, bool invertZ)
 {
 
 	projectPerspective3d(90.f, .1f, 100.f);
-	gxScalef(1.f, 1.f, -1.f);
+	if (invertZ)
+		gxScalef(1.f, 1.f, -1.f);
 	gxTranslatef(0.f, 0.f, z);
 
 }
