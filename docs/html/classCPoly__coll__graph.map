@@ -1,0 +1,6 @@
+base referer
+rect $classCPlane.html 23,101 90,128
+rect $classCEdge.html 97,237 158,264
+rect $classCVector.html 166,8 235,34
+rect $classCVertex.html 166,101 235,128
+rect $classCSphere.html 238,165 313,192

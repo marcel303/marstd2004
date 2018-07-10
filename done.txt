@@ -1,0 +1,13 @@
+2004-03-14
+----------
+	Marcel Smit fixed some @file errors Doxygen whined about.
+	Marcel Smit wrote CCsg3D test app.
+	Marcel Smit added 3D CSG addition, subtraction and intersection.
+
+2004-03-06
+----------
+	Marcel Smit wrote CCsg2D test app.
+	Marcel Smit wrote CPoly test app.
+	Marcel Smit rewrote CPoly::clip* methods.
+	Marcel Smit added 2D CSG addition, subtraction, intersection and xor.
+	Marcel Smit created this file to list MarSTD's progress.

@@ -1,0 +1,17 @@
+* Optimize GeomCompiler. Hash vertex search? Speedup removing duplicate indices. (Or prevent duplicate indices).
+* optimize bezier algo to use polynomial stuff, integration, derivatives, etc..
+* shared planes in CCompiledBsp?
+* shared planes in CCompiledMesh?
+* NURBS class.
+* Texture coordinates generator.
+	- Sphere (position).
+	- Cilinder (position, direction).
+	- Cube (position).
+	- Plane (position, normal).
+	- Auto-plane (position, either _|_ X, _|_ Y or _|_ z).
+	- Cubemap (position.. texture[6]).
+* Change CMatrix to CMatrixStack and implement CMatrix3 and CMatrix4.
+* Move CIsosurface code into header.
+* Octree class that splits nodes with volume > treshold. Bounding box. Uses bounding box's largest dimension to get splitting plane.
+* Reorganize code, so REAL inline stuff gets compiled inline. Other code willhave to be inc'ed with marstd.cpp.
+* Maybe a voxel class..
