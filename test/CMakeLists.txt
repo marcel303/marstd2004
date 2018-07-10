@@ -15,6 +15,12 @@ project(marstd2004-examples)
 
 # --- marstd2004-examples ---
 
+set(libs marstd2004 framework ${FRAMEWORK_LIBRARIES})
+
+set(source_test main.cpp)
+add_executable(test ${source_test})
+target_link_libraries(test ${libs})
+
 set(source_bsp CBsp/main.cpp)
 set(source_csg3d CCsg3D/main.cpp)
 set(source_csg3ds CCsg3Ds/main.cpp)
@@ -26,8 +32,6 @@ add_executable(CCsg3D ${source_csg3d})
 add_executable(CCsg3Ds ${source_csg3ds})
 add_executable(CGeomCompiler ${source_geomcompiler})
 add_executable(CIsosurface ${source_isosurface})
-
-set(libs marstd2004 framework ${FRAMEWORK_LIBRARIES})
 
 target_link_libraries(CBsp ${libs})
 target_link_libraries(CCsg3D ${libs})

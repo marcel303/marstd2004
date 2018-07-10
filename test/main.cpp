@@ -1,6 +1,6 @@
-#include <allegro.h>
 #include "marstd.cpp"
-#include "util/SOpenGL.h"
+#include "Util/SOpenGL.h"
+#include "framework.h"
 
 static void renderMesh(CMesh& mesh);
 static void isosurfaceOutput(int triangleCount, CIsosurfaceVertex* vertex);
@@ -8,12 +8,10 @@ static void isosurfaceOutput(int triangleCount, CIsosurfaceVertex* vertex);
 int main(int argc, char* argv[])
 {
 
-    allegro_init();
-    
-    install_keyboard();
-    
-    if (SOpenGL::I().setGraphicsMode(640, 480, desktop_color_depth(), false) < 0)
-        exit(-1);
+	framework.enableDepthBuffer = true;
+	
+    if (!framework.init(0, nullptr, 640, 480))
+    	exit(-1);
 
     // ============
     // CGeomBuilder
@@ -27,10 +25,12 @@ int main(int argc, char* argv[])
     
     float t = 0.0;
     
-    while (!key[KEY_ESC])
+    while (!keyboard.wentDown(SDLK_ESCAPE))
     {
-    
-        if (key[KEY_R])
+		
+    	framework.process();
+		
+        if (keyboard.wentDown(SDLK_r))
         {
         
             mesh.clear();
@@ -77,22 +77,21 @@ int main(int argc, char* argv[])
             
             CCompiledMesh temp;
             CGeomCompiler::I().compile(mesh, temp);
-            printf("%d\n", temp.vertex.size());
-            
-            key[KEY_R] = 0;
+            printf("%lu\n", temp.vertex.size());
                 
         }
-        
+		
+        framework.beginDraw(0, 0, 0, 0);
+        setBlend(BLEND_OPAQUE);
+		
         SOpenGL::I().setupStandardMatrices();
         
-        glMatrixMode(GL_MODELVIEW);
+        gxMatrixMode(GL_MODELVIEW);
         
-        glRotatef(t * 1.012, 1.0, 0.0, 0.0);
-        glRotatef(t * 1.123, 0.0, 1.0, 0.0);
-        glRotatef(t * 1.234, 0.0, 0.0, 1.0);
-        
-        glClearColor(0.0, 0.0, 0.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        gxRotatef(t * 1.012, 1.0, 0.0, 0.0);
+        gxRotatef(t * 1.123, 0.0, 1.0, 0.0);
+        gxRotatef(t * 1.234, 0.0, 0.0, 1.0);
+		
         glDepthFunc(GL_LESS);
         glEnable(GL_DEPTH_TEST);
         
@@ -100,13 +99,13 @@ int main(int argc, char* argv[])
         
 		renderMesh(mesh);
         
-        SOpenGL::I().flip();
+        framework.endDraw();
         
         t += 1.0 / 30.0;
         
     }
-    
-	key[KEY_ESC] = 0;
+		
+    framework.process();
 
     }
     
@@ -138,9 +137,12 @@ int main(int argc, char* argv[])
         }
     }
     
-    while (!key[KEY_ESC]);
+    while (!keyboard.wentDown(SDLK_ESCAPE))
+    {
+    	framework.process();
+	}
 
-	key[KEY_ESC] = 0;
+	framework.process();
     
     }
     
@@ -164,9 +166,11 @@ int main(int argc, char* argv[])
     
     float t = 0.0;
     
-	while (!key[KEY_ESC])
+	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
 	
+		framework.process();
+		
 		for (int i = 0; i < count; ++i)
 		{
 		
@@ -184,16 +188,17 @@ int main(int argc, char* argv[])
 		
 		isosurface.calculateNormals();
 		
+		framework.beginDraw(0, 0, 0, 0);
+		setBlend(BLEND_OPAQUE);
+		
         SOpenGL::I().setupStandardMatrices();
 
-        glMatrixMode(GL_MODELVIEW);
+        gxMatrixMode(GL_MODELVIEW);
 
-        glRotatef(t * 1.012, 1.0, 0.0, 0.0);
-        glRotatef(t * 1.123, 0.0, 1.0, 0.0);
-        glRotatef(t * 1.234, 0.0, 0.0, 1.0);
+        gxRotatef(t * 1.012, 1.0, 0.0, 0.0);
+        gxRotatef(t * 1.123, 0.0, 1.0, 0.0);
+        gxRotatef(t * 1.234, 0.0, 0.0, 1.0);
 
-        glClearColor(0.0, 0.0, 0.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDepthFunc(GL_LESS);
         glEnable(GL_DEPTH_TEST);
 
@@ -201,20 +206,19 @@ int main(int argc, char* argv[])
 
 		isosurface.output(100, vertex, isosurfaceOutput);
 
-        SOpenGL::I().flip();
+        framework.endDraw();
         
 		t += 1.0 / 30.0;
 	
 	}
     
-	key[KEY_ESC] = 0;
+	framework.process();
     
     }
     
     return 0;
 
 }
-END_OF_MAIN();
 
 static void renderMesh(CMesh& mesh)
 {
@@ -222,33 +226,33 @@ static void renderMesh(CMesh& mesh)
     for (CPoly* poly = mesh.polyHead; poly; poly = poly->next)
     {
 
-        glColor3ub(
+        gxColor3ub(
             int((poly->plane.normal[0] + 1.0) * 0.5 * 255),
             int((poly->plane.normal[1] + 1.0) * 0.5 * 255),
             int((poly->plane.normal[2] + 1.0) * 0.5 * 255));
 
-        glBegin(GL_POLYGON);
+        gxBegin(GL_TRIANGLE_FAN);
         {
             for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
             {
-                glVertex3fv(edge->p);
+                gxVertex3fv(edge->p);
             }
         }
-        glEnd();
+        gxEnd();
         
-        glColor3ub(255, 255, 255);
+        gxColor3ub(255, 255, 255);
         
-        glBegin(GL_LINES);
+        gxBegin(GL_LINES);
         {
             for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
             {
             	CVector p1 = edge->p;
             	CVector p2 = edge->p + poly->plane.normal * 0.1;
-                glVertex3fv(p1);            	
-                glVertex3fv(p2);
+                gxVertex3fv(p1);
+                gxVertex3fv(p2);
             }
         }
-        glEnd();        
+        gxEnd();
         
     }
         
@@ -257,7 +261,7 @@ static void renderMesh(CMesh& mesh)
 static void isosurfaceOutput(int triangleCount, CIsosurfaceVertex* vertex)
 {
 
-	glBegin(GL_TRIANGLES);
+	gxBegin(GL_TRIANGLES);
 	{
 	
 		for (int i = 0; i < triangleCount; ++i)
@@ -266,15 +270,15 @@ static void isosurfaceOutput(int triangleCount, CIsosurfaceVertex* vertex)
 			for (int j = 0; j < 3; ++j)
 			{
 
-				glColor3fv(vertex[i * 3 + j].n);
+				setColorf(vertex[i * 3 + j].n[0], vertex[i * 3 + j].n[1], vertex[i * 3 + j].n[2]);
 				
-				glVertex3fv(vertex[i * 3 + j].p);
+				gxVertex3fv(vertex[i * 3 + j].p);
 			
 			}
 		
 		}
 	
 	}
-	glEnd();
+	gxEnd();
 	
 }
