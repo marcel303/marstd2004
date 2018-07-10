@@ -1,6 +1,8 @@
 #ifndef __STextureManager_h__
 #define __STextureManager_h__
 
+#if 0
+
 #include <gl/gl.h>
 #include <vector>
 
@@ -148,5 +150,7 @@ class SOpenGLTextureManager
 	}
 	
 };
+
+#endif
 
 #endif
