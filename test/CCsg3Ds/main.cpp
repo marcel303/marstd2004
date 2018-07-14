@@ -2,7 +2,8 @@
 #include "marstd.h"
 #include "framework.h"
 
-static CVector position;
+static CVector rotationV;
+static CVector positionV;
 static CVector rotation;
 static CVector objectPosition;
 static CVector objectRotation;
@@ -16,10 +17,18 @@ int main(int argc, char* argv[])
 
 	framework.enableDepthBuffer = true;
 	
-	if (!framework.init(0, nullptr, 640, 480))
+	if (!framework.init(0, nullptr, 1024, 768))
 		exit(-1);
 
-	position[2] = 4.0;
+	const char* message =
+		"press ARROW KEYS + A/Z to move around\n" \
+		"press 1-4 to change CSG operation\n" \
+		"press Q/W/E to change CSG shape\n" \
+		"press SPACE to toggle CSG shape animation";
+	
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Instructions.", message, nullptr);
+	
+	positionV[2] = 4.0;
 	
 	bool animate = true;
 
@@ -34,20 +43,23 @@ int main(int argc, char* argv[])
 			animate = !animate;
 		
 		if (keyboard.isDown(SDLK_LEFT))
-			position[0] -= 0.05;
+			positionV[0] -= 0.05;
 		if (keyboard.isDown(SDLK_RIGHT))
-			position[0] += 0.05;
+			positionV[0] += 0.05;
 
 		if (keyboard.isDown(SDLK_a))
-			position[1] += 0.05;
+			positionV[1] += 0.05;
 		if (keyboard.isDown(SDLK_z))
-			position[1] -= 0.05;
+			positionV[1] -= 0.05;
 
 		if (keyboard.isDown(SDLK_DOWN))
-			position[2] += 0.05;
+			positionV[2] += 0.05;
 		if (keyboard.isDown(SDLK_UP))
-			position[2] -= 0.05;
-
+			positionV[2] -= 0.05;
+		
+		rotationV[1] -= mouse.dx / 10.0f;
+		rotationV[0] -= mouse.dy / 10.0f;
+		
 		rotation[0] = t * 10.0;
 		rotation[1] = t * 11.0;
 		rotation[2] = t * 13.0;
@@ -59,8 +71,12 @@ int main(int argc, char* argv[])
 //		glDepthMask(0);
 
 		SOpenGL::I().setupStandardMatrices(0.0);
-
-		gxTranslatef(-position[0], -position[1], -position[2]);
+		
+		gxRotatef(-rotationV[0], 1.0f, 0.0f, 0.0f);
+		gxRotatef(-rotationV[1], 0.0f, 1.0f, 0.0f);
+		gxRotatef(-rotationV[2], 0.0f, 0.0f, 1.0f);
+		gxTranslatef(-positionV[0], -positionV[1], -positionV[2]);
+		
 		gxRotatef(t * 10.0, 1.0, 0.0, 0.0);
 		gxRotatef(t * 10.0, 0.0, 1.0, 0.0);
 		gxRotatef(t * 10.0, 0.0, 0.0, 1.0);
@@ -75,15 +91,24 @@ int main(int argc, char* argv[])
 		CMesh* mesh5 = new CMesh;				
 		
 		// Mesh 1.
-		CGeomBuilder::I().cube(*mesh1);		
+		if (keyboard.isDown(SDLK_w))
+			CGeomBuilder::I().cilinder(*mesh1, 10);
+		if (keyboard.isDown(SDLK_e))
+			CGeomBuilder::I().donut(*mesh1, 5, 5, 0.75, 0.5);
+		else
+			CGeomBuilder::I().cube(*mesh1);
+		
 		// Mesh 2.
 		CGeomBuilder::I().matrix.push();
 		CGeomBuilder::I().matrix.translate(objectPosition);
-		CGeomBuilder::I().matrix.rotate(objectPosition);		
+		CGeomBuilder::I().matrix.rotate(objectPosition);
+		if (keyboard.isDown(SDLK_q))
+			CGeomBuilder::I().cilinder(*mesh2, 10);
+		else
+			CGeomBuilder::I().donut(*mesh2, 5, 5, 0.75, 0.5);
 //		CGeomBuilder::I().cube(*mesh2);
-		CGeomBuilder::I().donut(*mesh2, 5, 5, 0.75, 0.5);
-//		CGeomBuilder::I().cilinder(*mesh2, 10);
-		CGeomBuilder::I().matrix.pop();		
+		CGeomBuilder::I().matrix.pop();
+		
 		// Mesh 4.
 		CGeomBuilder::I().matrix.push();
 		CGeomBuilder::I().matrix.rotate(objectPosition * 2.0);		
@@ -93,6 +118,24 @@ int main(int argc, char* argv[])
 //		CGeomBuilder::I().cilinder(*mesh4, 10);
 		CGeomBuilder::I().matrix.pop();				
 
+#if 1
+		// Mesh 1 & 2 -> Mesh 3.
+		if (keyboard.isDown(SDLK_1))
+			CCsg3D::I().addition(mesh1, mesh2, mesh3);
+		else if (keyboard.isDown(SDLK_2))
+			CCsg3D::I().intersection(mesh1, mesh2, mesh3);
+		else
+			CCsg3D::I().subtraction(mesh1, mesh2, mesh3);
+		
+		// Mesh 3 & 4 -> Mesh 5.
+		if (keyboard.isDown(SDLK_3))
+			CCsg3D::I().subtraction(mesh3, mesh4, mesh5);
+		if (keyboard.isDown(SDLK_4))
+			CCsg3D::I().intersection(mesh3, mesh4, mesh5);
+		else
+			CCsg3D::I().addition(mesh3, mesh4, mesh5);
+//		mesh3->move(*mesh5);
+#else
 		// Mesh 1 & 2 -> Mesh 3.		
 //		CCsg3D::I().addition(mesh1, mesh2, mesh3);
 		CCsg3D::I().subtraction(mesh1, mesh2, mesh3);
@@ -105,6 +148,7 @@ int main(int argc, char* argv[])
 		else
 			CCsg3D::I().addition(mesh3, mesh4, mesh5);
 //		mesh3->move(mesh5);
+#endif
 		
 		printf("PC: %d - OP: %f %f %f\n", mesh5->polyCount, objectPosition[0], objectPosition[1], objectPosition[2]);
 		
@@ -154,7 +198,7 @@ static void doRenderBsp(CBsp* bsp)
 	}
 	else
 	{
-		float d = bsp->plane * position;
+		float d = bsp->plane * positionV;
 		if (d >= 0.0)
 		{
 			doRenderBsp(bsp->child[1]);
