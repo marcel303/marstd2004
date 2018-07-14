@@ -1,5 +1,5 @@
-#include <allegro.h>
 #include "marstd.cpp"
+#include "framework.h"
 
 class Polydata
 {
@@ -14,29 +14,19 @@ class Polydata
 	int lightness;
 };
 
-static BITMAP* colourmap = 0;
-
-static void renderPoly(CPoly* poly, int colour = -1);
-static void renderMesh(CMesh* mesh, int colour = -1);
+static void renderPoly(CPoly* poly, Color color = colorBlackTranslucent);
+static void renderMesh(CMesh* mesh, Color color = colorBlackTranslucent);
 static bool insidePoly(CPoly* poly, int x, int y);
 
 int main(int argc, char* argv[])
 {
 
-	allegro_init();
+	if (!framework.init(0, nullptr, 400, 400))
+		exit(-1);
 	
-	allegro_message("Press 1-4 to move through all 2D CSG modes.");
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Instructions.", "Press 1-4 to move through all 2D CSG modes.", nullptr);
 	
-	install_keyboard();
-	install_mouse();
-	
-	set_color_depth(32);
-
-	set_gfx_mode(GFX_AUTODETECT_WINDOWED, 400, 400, 0, 0);
-
-	colourmap = create_bitmap(SCREEN_W, SCREEN_H);
-
-	CVector screenMid = CVector(SCREEN_W / 2.0, SCREEN_H / 2.0, 0.0);
+	CVector screenMid = CVector(400 / 2.0, 400 / 2.0, 0.0);
 
 	CPoly* poly1 = new CPoly;
 	for (int i = 0; i < 4; ++i)
@@ -79,30 +69,26 @@ int main(int argc, char* argv[])
 	intersection->data = new Polydata;
 	for (CPoly* poly = exclusiveor->polyHead; poly; poly = poly->next)
 		poly->data = new Polydata;
-
-	show_mouse(screen);
-
-	while (!key[KEY_ESC])
+	
+	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
 
+		framework.process();
+		
 		static int type = 0;
-
-		while (keypressed())
-		{
-			int c = readkey() >> 8;
-			if (c == KEY_1)
-				type = 0;
-			if (c == KEY_2)
-				type = 1;
-			if (c == KEY_3)
-				type = 2;
-			if (c == KEY_4)
-				type = 3;
-		}
+		
+		if (keyboard.wentDown(SDLK_1))
+			type = 0;
+		if (keyboard.wentDown(SDLK_2))
+			type = 1;
+		if (keyboard.wentDown(SDLK_3))
+			type = 2;
+		if (keyboard.wentDown(SDLK_4))
+			type = 3;
 
 		// Render.
 
-		clear(colourmap);
+		framework.beginDraw(0, 0, 0, 0);
 
 		if (type == 0)
 			renderMesh(addition);
@@ -113,34 +99,27 @@ int main(int argc, char* argv[])
 		else if (type == 3)
 			renderMesh(exclusiveor);
 
-		char* desc[4] =
+		const char* desc[4] =
 		{
 			"CSG 2D: Addition",
 			"CSG 2D: Subtraction",
 			"CSG 2D: Intersection",
 			"CSG 2D: Exclusive or",
 		};
+		
+		setFont("../Data/calibri.ttf");
+		setColor(colorWhite);
+		drawText(5, 5, 14, +1, +1, "%s", desc[type]);
 
-		textprintf_ex(colourmap, font, 5, 5, makecol(255, 255, 255), makecol(0, 0, 0), desc[type]);
-
-		// Put colourmap on screen.
-
-		vsync();
-
-		scare_mouse();
-
-		blit(colourmap, screen, 0, 0, 0, 0, colourmap->w, colourmap->h);
-
-		unscare_mouse();
+		framework.endDraw();
 
 	}
-
-	destroy_bitmap(colourmap);
+	
+	framework.shutdown();
 
 	return 0;
 
 }
-END_OF_MAIN();
 
 static void printPoly(CPoly* poly)
 {
@@ -154,16 +133,16 @@ static void printPoly(CPoly* poly)
 
 }
 
-static void renderPoly(CPoly* poly, int colour)
+static void renderPoly(CPoly* poly, Color color)
 {
 
 	// Update polygon's state.
 
 	Polydata* polydata = (Polydata*)poly->data;
 
-	if (insidePoly(poly, mouse_x, mouse_y))
+	if (insidePoly(poly, mouse.x, mouse.y))
 	{
-		if (mouse_b & 1)
+		if (mouse.isDown(BUTTON_LEFT))
 		{
 			if (!polydata->pressed)
 				printPoly(poly);
@@ -194,9 +173,9 @@ static void renderPoly(CPoly* poly, int colour)
 		if (polydata->lightness < 63)
 			polydata->lightness = 63;
 	}
-
-	if (colour == -1)
-		colour = makecol(255, 255, 255);
+	
+	if (color.a == 0.f)
+		color = colorWhite;
 
 	int* points = new int[poly->edgeCount * 2];
 	int point = 0;
@@ -206,8 +185,14 @@ static void renderPoly(CPoly* poly, int colour)
 		points[point * 2 + 1] = (int)edge->p[1];
 		point++;
 	}
-	int fillColour = makecol(polydata->lightness, polydata->lightness, polydata->lightness);
-	polygon(colourmap, poly->edgeCount, points, fillColour);
+	Color fillColor = Color(polydata->lightness, polydata->lightness, polydata->lightness);
+	setColor(fillColor);
+	gxBegin(GL_TRIANGLE_FAN);
+	for (int i = 0; i < poly->edgeCount; ++i)
+	{
+		gxVertex2f(points[i * 2 + 0], points[i * 2 + 1]);
+	}
+	gxEnd();
 	delete[] points;
 
 	for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
@@ -221,26 +206,29 @@ static void renderPoly(CPoly* poly, int colour)
 		edgeMid[1] = (edge->p[1] + edge->edge2->p[1]) / 2.0;
 
 		// Vertex to vertex.
-
-		line(colourmap, (int)edge->p[0], (int)edge->p[1], (int)edge->edge2->p[0], (int)edge->edge2->p[1], colour);
+		
+		setColor(color);
+		drawLine((int)edge->p[0], (int)edge->p[1], (int)edge->edge2->p[0], (int)edge->edge2->p[1]);
 
 		// Plane || edge.
-
-		line(colourmap, (int)edgeMid[0], (int)edgeMid[1], int(edgeMid[0] + edge->edge_plane.normal[0] * normalSize), int(edgeMid[1] + edge->edge_plane.normal[1] * normalSize), makecol(0, 255, 0));
+		
+		setColor(0, 255, 0);
+		drawLine((int)edgeMid[0], (int)edgeMid[1], int(edgeMid[0] + edge->edge_plane.normal[0] * normalSize), int(edgeMid[1] + edge->edge_plane.normal[1] * normalSize));
 
 		// Plane _|_ edge.
-
-		line(colourmap, (int)edgeMid[0], (int)edgeMid[1], int(edgeMid[0] + edge->plane.normal[0] * normalSize), int(edgeMid[1] + edge->plane.normal[1] * normalSize), makecol(255, 255, 0));
+		
+		setColor(255, 255, 0);
+		drawLine((int)edgeMid[0], (int)edgeMid[1], int(edgeMid[0] + edge->plane.normal[0] * normalSize), int(edgeMid[1] + edge->plane.normal[1] * normalSize));
 
 	}
 
 }
 
-static void renderMesh(CMesh* mesh, int colour)
+static void renderMesh(CMesh* mesh, Color color)
 {
 
 	for (CPoly* poly = mesh->polyHead; poly; poly = poly->next)
-		renderPoly(poly, colour);
+		renderPoly(poly, color);
 
 }
 
