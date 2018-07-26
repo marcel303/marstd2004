@@ -10,7 +10,7 @@ static CVector objectRotation;
 
 static void renderBsp(CBsp* bsp);
 static void renderPoly(CPoly* poly);
-static void renderMesh(CMesh& mesh);
+static void renderMesh(CMesh& mesh, float fillOpacity, bool line);
 
 int main(int argc, char* argv[])
 {
@@ -28,38 +28,28 @@ int main(int argc, char* argv[])
 	
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Instructions.", message, nullptr);
 	
-	positionV[2] = 4.0;
+	Camera3d camera;
+	camera.yaw = 180.f;
+	camera.position[2] = 4.f;
 	
 	bool animate = true;
 
+	float t = 0.f;
+	
 	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
 
 		framework.process();
 		
-		static float t = 0.0;
+		const float dt = framework.timeStep;
 
 		if (keyboard.wentDown(SDLK_SPACE))
 			animate = !animate;
+	
+		camera.tick(framework.timeStep, true);
 		
-		if (keyboard.isDown(SDLK_LEFT))
-			positionV[0] -= 0.05;
-		if (keyboard.isDown(SDLK_RIGHT))
-			positionV[0] += 0.05;
-
-		if (keyboard.isDown(SDLK_a))
-			positionV[1] += 0.05;
-		if (keyboard.isDown(SDLK_z))
-			positionV[1] -= 0.05;
-
-		if (keyboard.isDown(SDLK_DOWN))
-			positionV[2] += 0.05;
-		if (keyboard.isDown(SDLK_UP))
-			positionV[2] -= 0.05;
-		
-		rotationV[1] -= mouse.dx / 10.0f;
-		rotationV[0] -= mouse.dy / 10.0f;
-		
+		positionV = CVector(camera.position[0], camera.position[1], camera.position[2]);
+	
 		rotation[0] = t * 10.0;
 		rotation[1] = t * 11.0;
 		rotation[2] = t * 13.0;
@@ -68,21 +58,14 @@ int main(int argc, char* argv[])
 
 		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_DEPTH_TEST);
-//		glDepthMask(0);
 
-		SOpenGL::I().setupStandardMatrices(0.0);
+		SOpenGL::I().setupStandardMatrices(0.0, false);
 		
-		gxRotatef(-rotationV[0], 1.0f, 0.0f, 0.0f);
-		gxRotatef(-rotationV[1], 0.0f, 1.0f, 0.0f);
-		gxRotatef(-rotationV[2], 0.0f, 0.0f, 1.0f);
-		gxTranslatef(-positionV[0], -positionV[1], -positionV[2]);
+		camera.pushViewMatrix();
 		
 		gxRotatef(t * 10.0, 1.0, 0.0, 0.0);
 		gxRotatef(t * 10.0, 0.0, 1.0, 0.0);
 		gxRotatef(t * 10.0, 0.0, 0.0, 1.0);
-
-		glBlendFunc(GL_ONE, GL_ONE);
-		glDisable(GL_BLEND);
 
 		CMesh* mesh1 = new CMesh;
 		CMesh* mesh2 = new CMesh;
@@ -116,9 +99,8 @@ int main(int argc, char* argv[])
 		CGeomBuilder::I().cube(*mesh4);
 //		CGeomBuilder::I().donut(*mesh4, 5, 5, 0.75, 0.5);
 //		CGeomBuilder::I().cilinder(*mesh4, 10);
-		CGeomBuilder::I().matrix.pop();				
-
-#if 1
+		CGeomBuilder::I().matrix.pop();
+		
 		// Mesh 1 & 2 -> Mesh 3.
 		if (keyboard.isDown(SDLK_1))
 			CCsg3D::I().addition(mesh1, mesh2, mesh3);
@@ -135,51 +117,44 @@ int main(int argc, char* argv[])
 		else
 			CCsg3D::I().addition(mesh3, mesh4, mesh5);
 //		mesh3->move(*mesh5);
-#else
-		// Mesh 1 & 2 -> Mesh 3.		
-//		CCsg3D::I().addition(mesh1, mesh2, mesh3);
-		CCsg3D::I().subtraction(mesh1, mesh2, mesh3);
-//		CCsg3D::I().intersection(mesh1, mesh2, mesh3);
-		// Mesh 3 & 4 -> Mesh 5.
-		if (keyboard.isDown(SDLK_1))
-			CCsg3D::I().intersection(mesh3, mesh4, mesh5);
-		else if (keyboard.isDown(SDLK_2))
-			CCsg3D::I().subtraction(mesh3, mesh4, mesh5);
-		else
-			CCsg3D::I().addition(mesh3, mesh4, mesh5);
-//		mesh3->move(mesh5);
-#endif
-		
+
 		printf("PC: %d - OP: %f %f %f\n", mesh5->polyCount, objectPosition[0], objectPosition[1], objectPosition[2]);
 		
-		renderMesh(*mesh5);
-
+		pushBlend(BLEND_OPAQUE);
+		renderMesh(*mesh5, 1.f, false);
+		popBlend();
+		
+		glDepthMask(GL_FALSE);
+		pushBlend(BLEND_ALPHA);
+		renderMesh(*mesh1, .1f, true);
+		renderMesh(*mesh2, .1f, true);
+		renderMesh(*mesh3, .1f, true);
+		renderMesh(*mesh4, .1f, true);
+		popBlend();
+		glDepthMask(GL_TRUE);
+		
 		glDisable(GL_DEPTH_TEST);
-		
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		
-		//renderMesh(*mesh5);
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     		
 		delete mesh1;
 		delete mesh2;
 		delete mesh3;
 		delete mesh4;
 		delete mesh5;
+		
+		camera.popViewMatrix();
 
 		framework.endDraw();
 
 		if (animate)
 		{
-			objectPosition[0] += 0.001;
-			objectPosition[1] += 0.001;
-			objectPosition[2] += 0.001;
-			objectRotation[0] += 0.003;
-			objectRotation[1] += 0.002;
-			objectRotation[2] += 0.001;
+			objectPosition[0] = sinf(t / 2.f / 2.345f) * 1.2f;
+			objectPosition[1] = sinf(t / 2.f / 3.456f) * 1.3f;
+			objectPosition[2] = sinf(t / 2.f / 4.567f) * 1.4f;
+			objectRotation[0] += 0.3 * dt / 2.f;
+			objectRotation[1] += 0.2 * dt / 2.f;
+			objectRotation[2] += 0.1 * dt / 2.f;
 			
-			t += 0.01;
+			t += dt;
 		}
 
 	}
@@ -247,27 +222,46 @@ static void renderPoly(CPoly* poly)
 
 }
 
-static void renderMesh(CMesh& mesh)
+static void renderMesh(CMesh& mesh, float fillOpacity, bool line)
 {
 
     for (CPoly* poly = mesh.polyHead; poly; poly = poly->next)
     {
 
-        gxColor3ub(
-            int((poly->plane.normal[0] + 1.0) * 0.5 * 255),
-            int((poly->plane.normal[1] + 1.0) * 0.5 * 255),
-            int((poly->plane.normal[2] + 1.0) * 0.5 * 255));
+		if (fillOpacity > 0.f)
+		{
+			gxColor4f(
+				(poly->plane.normal[0] + 1.0) * 0.5,
+				(poly->plane.normal[1] + 1.0) * 0.5,
+				(poly->plane.normal[2] + 1.0) * 0.5,
+				fillOpacity);
 
-//		gxColor3ub(63, 63, 63);
+			//gxColor3ub(63, 63, 63);
+			
+			gxBegin(GL_TRIANGLE_FAN);
+			{
+				for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
+				{
+					gxVertex3fv(edge->p);
+				}
+			}
+			gxEnd();
+		}
 		
-        gxBegin(GL_TRIANGLE_FAN);
-        {
-            for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
-            {
-                gxVertex3fv(edge->p);
-            }
-        }
-        gxEnd();
+		if (line)
+		{
+			gxColor3ub(63, 63, 63);
+			
+			gxBegin(GL_LINES);
+			{
+				for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
+				{
+					gxVertex3fv(edge->p);
+					gxVertex3fv(edge->edge2->p);
+				}
+			}
+			gxEnd();
+		}
         
         gxColor3ub(255, 255, 255);
         
