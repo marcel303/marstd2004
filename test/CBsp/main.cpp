@@ -1,4 +1,4 @@
-#include "marstd.cpp"
+#include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
 
@@ -12,9 +12,13 @@ static void render(CCompiledMesh& mesh, float opacity);
 int main(int argc, char* argv[])
 {
 
+#if defined(CHIBI_RESOURCE_PATH)
+	changeDirectory(CHIBI_RESOURCE_PATH);
+#endif
+
 	framework.enableDepthBuffer = true;
 	
-	if (!framework.init(0, nullptr, 640, 480))
+	if (!framework.init(640, 480))
 		exit(-1);
 
 #if 0

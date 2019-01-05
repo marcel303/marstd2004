@@ -1,0 +1,5 @@
+library marstd2
+	scan_files h traverse
+	scan_files inl traverse
+	add_files marstd.cpp
+	header_path . expose

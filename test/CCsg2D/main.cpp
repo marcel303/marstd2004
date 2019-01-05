@@ -1,4 +1,4 @@
-#include "marstd.cpp"
+#include "marstd.h"
 #include "framework.h"
 
 class Polydata
@@ -21,7 +21,11 @@ static bool insidePoly(CPoly* poly, int x, int y);
 int main(int argc, char* argv[])
 {
 
-	if (!framework.init(0, nullptr, 400, 400))
+#if defined(CHIBI_RESOURCE_PATH)
+	changeDirectory(CHIBI_RESOURCE_PATH);
+#endif
+	
+	if (!framework.init(400, 400))
 		exit(-1);
 	
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Instructions.", "Press 1-4 to move through all 2D CSG modes.", nullptr);

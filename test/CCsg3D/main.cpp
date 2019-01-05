@@ -1,4 +1,4 @@
-#include "marstd.cpp"
+#include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
 
@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 
 	framework.enableDepthBuffer = true;
 	
-	if (!framework.init(0, nullptr, 640, 480))
+	if (!framework.init(640, 480))
 		exit(-1);
 	
 	CMesh A;

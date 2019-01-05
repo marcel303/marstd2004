@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <math.h>
-#include "marstd.cpp"
+#include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
 
@@ -16,6 +16,10 @@ static void draw_triangles(int num, CIsosurfaceVertex* v);
 
 int main(int argc, char* argv[])
 {
+
+#if defined(CHIBI_RESOURCE_PATH)
+	changeDirectory(CHIBI_RESOURCE_PATH);
+#endif
 
 //--------------------------------------------------------------------
 // Initialize system.
@@ -35,7 +39,7 @@ int main(int argc, char* argv[])
 
 	framework.enableDepthBuffer = true;
 	
-	if (!framework.init(0, nullptr, 800, 600))
+	if (!framework.init(800, 600))
 	{
 		//allegro_message("Error: unable to set OpenGL graphics mode.");
 		return -1;

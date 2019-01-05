@@ -15,9 +15,13 @@ static void renderMesh(CMesh& mesh, float fillOpacity, bool line);
 int main(int argc, char* argv[])
 {
 
+#if defined(CHIBI_RESOURCE_PATH)
+	changeDirectory(CHIBI_RESOURCE_PATH);
+#endif
+
 	framework.enableDepthBuffer = true;
 	
-	if (!framework.init(0, nullptr, 1024, 768))
+	if (!framework.init(1024, 768))
 		exit(-1);
 
 	const char* message =

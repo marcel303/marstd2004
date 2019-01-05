@@ -1,0 +1,35 @@
+app marstd2-CBsp
+	depend_library framework
+	depend_library marstd2
+	resource_path CBsp
+	add_files CBsp/main.cpp
+
+app marstd2-CCsg2D
+	depend_library framework
+	depend_library marstd2
+	resource_path CCsg2D
+	add_files CCsg2D/main.cpp
+
+app marstd2-CCsg3D
+	depend_library framework
+	depend_library marstd2
+	resource_path CCsg3D
+	add_files CCsg3D/main.cpp
+
+app marstd2-CCsg3Ds
+	depend_library framework
+	depend_library marstd2
+	resource_path CCsg3Ds
+	add_files CCsg3Ds/main.cpp
+
+app marstd2-CGeomCompiler
+	depend_library framework
+	depend_library marstd2
+	resource_path CGeomCompiler
+	add_files CGeomCompiler/main.cpp
+
+app marstd2-CIsosurface
+	depend_library framework
+	depend_library marstd2
+	resource_path CIsosurface
+	add_files CIsosurface/main.cpp

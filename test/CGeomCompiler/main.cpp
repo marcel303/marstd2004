@@ -1,4 +1,4 @@
-#include "marstd.cpp"
+#include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
 
@@ -8,9 +8,13 @@ static void generateTextureCoordinates(CPoly& poly);
 int main(int argc, char* argv[])
 {
 
+#if defined(CHIBI_RESOURCE_PATH)
+	changeDirectory(CHIBI_RESOURCE_PATH);
+#endif
+
 	framework.enableDepthBuffer = true;
 	
-	if (!framework.init(0, nullptr, 640, 480))
+	if (!framework.init(640, 480))
 		exit(-1);
 		
 	CMesh mesh, mesh2;
@@ -78,7 +82,7 @@ int main(int argc, char* argv[])
 	if (texturemap == 0)
 		exit(-1);
 
-  	float time = 0.0;
+  	float time = 0.f;
   	
 	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
@@ -89,15 +93,15 @@ int main(int argc, char* argv[])
   		
   			CMesh mesh;
   			
-  			float scale = (rand()&1023) / 1023.0 + 0.5;
+  			float scale = (rand()&1023) / 1023.f + 0.5f;
 			CGeomBuilder::I().matrix.identity();
 			CGeomBuilder::I().matrix.scale(scale, scale, scale);
 			CGeomBuilder::I().cube(mesh);
-  			scale = (rand()&1023) / 1023.0 + 0.5;
+  			scale = (rand()&1023) / 1023.f + 0.5f;
 			CGeomBuilder::I().matrix.identity();
 			CGeomBuilder::I().matrix.scale(scale, scale, scale);
 			CGeomBuilder::I().sphere(mesh, 10, 20);
-  			scale = (rand()&1023) / 1023.0 + 0.5;
+  			scale = (rand()&1023) / 1023.f + 0.5f;
 			CGeomBuilder::I().matrix.identity();
 			CGeomBuilder::I().matrix.scale(scale, scale, scale);
 			CGeomBuilder::I().cone(mesh, 10);
@@ -122,9 +126,9 @@ int main(int argc, char* argv[])
 		
 		SOpenGL::I().setupStandardMatrices();
 		
-		gxRotatef(time / 1.123, 1.0, 0.0, 0.0);
-		gxRotatef(time / 1.234, 0.0, 1.0, 0.0);
-		gxRotatef(time / 1.345, 0.0, 0.0, 1.0);
+		gxRotatef(time / 1.123, 1.f, 0.f, 0.f);
+		gxRotatef(time / 1.234, 0.f, 1.f, 0.f);
+		gxRotatef(time / 1.345, 0.f, 0.f, 1.f);
 
 		GLfloat matrix[16];
 		gxGetMatrixf(GL_MODELVIEW, matrix);
@@ -166,21 +170,21 @@ int main(int argc, char* argv[])
       					base.vertex[base.polygon[p].vertex[j]].p[0],
       					base.vertex[base.polygon[p].vertex[j]].p[1],
       					base.vertex[base.polygon[p].vertex[j]].p[2],
-      					1.0
+      					1.f
       				};
       				float n[4] =
       				{
       					base.vertex[base.polygon[p].vertex[j]].plane.normal[0],
       					base.vertex[base.polygon[p].vertex[j]].plane.normal[1],
       					base.vertex[base.polygon[p].vertex[j]].plane.normal[2],
-      					0.0
+      					0.f
       				};
       				float v_t[4];
       				float n_t[4];
       				for (int i = 0; i < 4; ++i)
       				{
-      					v_t[i] = 0.0;
-      					n_t[i] = 0.0;
+      					v_t[i] = 0.f;
+      					n_t[i] = 0.f;
       					for (int j = 0; j < 4; ++j)
       					{
       						v_t[i] += v[j] * matrix[i + j * 4];
@@ -210,21 +214,21 @@ int main(int argc, char* argv[])
   					base.vertex[i].p[0],
   					base.vertex[i].p[1],
   					base.vertex[i].p[2],
-					1.0
+					1.f
   				};
   				float v2[4] =
   				{
-  					base.vertex[i].p[0] + base.vertex[i].plane.normal[0] * 0.1,
-  					base.vertex[i].p[1] + base.vertex[i].plane.normal[1] * 0.1,
-  					base.vertex[i].p[2] + base.vertex[i].plane.normal[2] * 0.1,
-					1.0
+  					base.vertex[i].p[0] + base.vertex[i].plane.normal[0] * 0.1f,
+  					base.vertex[i].p[1] + base.vertex[i].plane.normal[1] * 0.1f,
+  					base.vertex[i].p[2] + base.vertex[i].plane.normal[2] * 0.1f,
+					1.f
   				};
   				float v1_t[4];
   				float v2_t[4];
   				for (int i = 0; i < 4; ++i)
   				{
-  					v1_t[i] = 0.0;
-  					v2_t[i] = 0.0;
+  					v1_t[i] = 0.f;
+  					v2_t[i] = 0.f;
   					for (int j = 0; j < 4; ++j)
   					{
   						v1_t[i] += v1[j] * matrix[i + j * 4];
@@ -249,21 +253,21 @@ int main(int argc, char* argv[])
   					base.polygon[i].center[0],
   					base.polygon[i].center[1],
   					base.polygon[i].center[2],
-					1.0
+					1.f
   				};
   				float v2[4] =
   				{
-  					base.polygon[i].center[0] + base.polygon[i].plane.normal[0] * 0.1,
-  					base.polygon[i].center[1] + base.polygon[i].plane.normal[1] * 0.1,
-  					base.polygon[i].center[2] + base.polygon[i].plane.normal[2] * 0.1,
-					1.0
+  					base.polygon[i].center[0] + base.polygon[i].plane.normal[0] * 0.1f,
+  					base.polygon[i].center[1] + base.polygon[i].plane.normal[1] * 0.1f,
+  					base.polygon[i].center[2] + base.polygon[i].plane.normal[2] * 0.1f,
+					1.f
   				};
   				float v1_t[4];
   				float v2_t[4];
   				for (int i = 0; i < 4; ++i)
   				{
-  					v1_t[i] = 0.0;
-  					v2_t[i] = 0.0;
+  					v1_t[i] = 0.f;
+  					v2_t[i] = 0.f;
   					for (int j = 0; j < 4; ++j)
   					{
   						v1_t[i] += v1[j] * matrix[i + j * 4];
@@ -278,7 +282,7 @@ int main(int argc, char* argv[])
 		
 		framework.endDraw();
 		
-		time += 1.0 / 10.0;
+		time += 1.f / 10.f;
 	
 	}
 
@@ -302,16 +306,16 @@ static void generateTextureCoordinates(CPoly& poly)
 	const float uv[3][2][3] =
 	{
 		{
-			{ 0.0, 0.0, 1.0 },
-			{ 0.0, 1.0, 0.0 }
+			{ 0.f, 0.f, 1.f },
+			{ 0.f, 1.f, 0.f }
 		},
 		{
-			{ 0.0, 0.0, 1.0 },
-			{ 1.0, 0.0, 0.0 }
+			{ 0.f, 0.f, 1.f },
+			{ 1.f, 0.f, 0.f }
 		},
 		{
-			{ 1.0, 0.0, 0.0 },
-			{ 0.0, 1.0, 0.0 }
+			{ 1.f, 0.f, 0.f },
+			{ 0.f, 1.f, 0.f }
 		}
 	};
 
