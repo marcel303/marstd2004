@@ -2,6 +2,7 @@
 // CIsosurface text.
 //////////////////////////////////////////////////////////////////////
 
+#include <GL/glew.h> // glPolygonMode, GL_CULL_FACE
 #include <math.h>
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
@@ -59,8 +60,8 @@ int main(int argc, char* argv[])
 	
 	// Textures.
 	
-	GLuint envmap = getTexture("data/envmap.bmp");
-	GLuint texmap = getTexture("data/texmap.bmp");
+	GxTextureId envmap = getTexture("data/envmap.bmp");
+	GxTextureId texmap = getTexture("data/texmap.bmp");
  	
 //--------------------------------------------------------------------
 // Main loop.
@@ -161,12 +162,12 @@ int main(int argc, char* argv[])
 		
 		projectPerspective3d(90.f, .001f, 100.f);
 		
-		glDepthFunc(GL_LESS);
-		glEnable(GL_DEPTH_TEST);		
+		setDepthTest(true, DEPTH_LESS);
+		setBlend(BLEND_OPAQUE);
 		
 		// Setup and enable lighting.
 
-		GLfloat l_direction[4][4] =
+		float l_direction[4][4] =
 		{
 			{ +1.0, +1.0, 0.0, 0.0 },
 			{ -1.0, +1.0, 0.0, 0.0 },
@@ -174,7 +175,7 @@ int main(int argc, char* argv[])
 			{ +1.0, -1.0, 0.0, 0.0 }
 		};
 			
-		GLfloat l_diffuse[4][4] =
+		float l_diffuse[4][4] =
 		{
 			{ 1.5, 0.5, 0.5, 1.0 },
 			{ 1.5, 0.5, 1.5, 1.0 },
@@ -228,18 +229,17 @@ int main(int argc, char* argv[])
 	
 		gxSetTexture(texmap);
   	
-		glDepthMask(0);		// We disable writing to the depth buffer. When drawing multiple unsorted transparent surfaces, you will need to do this or suffer the consequences.
+		pushDepthWrite(false);		// We disable writing to the depth buffer. When drawing multiple unsorted transparent surfaces, you will need to do this or suffer the consequences.
 
 	// todo
 		//glDisable(GL_LIGHTING);
 		//glDisable(GL_TEXTURE_GEN_S);
 		//glDisable(GL_TEXTURE_GEN_T);
-	
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);	
+
+		pushBlend(BLEND_ALPHA);
 		gxColor4f(1.0, 1.0, 1.0, 0.5);
 	
-		gxBegin(GL_QUADS);
+		gxBegin(GX_QUADS);
 		{
 	
 			gxTexCoord2f(0.0, 0.0);
@@ -259,9 +259,9 @@ int main(int argc, char* argv[])
 		//glEnable(GL_TEXTURE_GEN_T);
 		//glEnable(GL_LIGHTING);
 	
-		glDisable(GL_BLEND);
-	
-		glDepthMask(1);
+		popBlend();
+		
+		popDepthWrite();
  		
 //--------------------------------------------------------------------
 // Make back buffer visible.
@@ -296,7 +296,7 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 
 	// Draw vertex arrays.
 	
-	gxBegin(GL_TRIANGLES);
+	gxBegin(GX_TRIANGLES);
 	{
 		for (int i = 0; i < num * 3; ++i)
 		{
@@ -319,7 +319,7 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 	
 	// Draw vertex arrays a second time.
 	
-	gxBegin(GL_TRIANGLES);
+	gxBegin(GX_TRIANGLES);
 	{
 		for (int i = 0; i < num * 3; ++i)
 		{

@@ -1,3 +1,4 @@
+#include <GL/glew.h> // glPolygonMode, GL_MODELVIEW
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
@@ -77,7 +78,7 @@ int main(int argc, char* argv[])
 	
 //	readkey();
 	
-	GLuint texturemap = getTexture("../data/texture1.bmp");
+	GxTextureId texturemap = getTexture("../data/texture1.bmp");
 
 	if (texturemap == 0)
 		exit(-1);
@@ -117,9 +118,7 @@ int main(int argc, char* argv[])
 	
 		framework.beginDraw(100, 100, 100, 0);
 		
-		glDepthFunc(GL_LEQUAL);
-		glEnable(GL_DEPTH_TEST);
-		glDepthMask(0);
+		setDepthTest(true, DEPTH_LEQUAL, false);
 		
 		glBlendFunc(GL_SRC_COLOR, GL_DST_COLOR);
 		glEnable(GL_BLEND);
@@ -130,7 +129,7 @@ int main(int argc, char* argv[])
 		gxRotatef(time / 1.234, 0.f, 1.f, 0.f);
 		gxRotatef(time / 1.345, 0.f, 0.f, 1.f);
 
-		GLfloat matrix[16];
+		float matrix[16];
 		gxGetMatrixf(GL_MODELVIEW, matrix);
 		gxMatrixMode(GL_MODELVIEW);
 		gxLoadIdentity();
@@ -160,7 +159,7 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < (int)compiledMesh.polygonIndex.size(); ++i)
 		{
 			gxColor3ub(255, 255, 255);
-      		gxBegin(GL_TRIANGLE_FAN);
+      		gxBegin(GX_TRIANGLE_FAN);
       		{
       			int p = compiledMesh.polygonIndex[i];
       			for (int j = 0; j < (int)base.polygon[p].vertex.size(); ++j)
@@ -205,7 +204,7 @@ int main(int argc, char* argv[])
  		// Normals at vertices.
 
   		gxColor3ub(0, 255, 0);
-  		gxBegin(GL_LINES);
+  		gxBegin(GX_LINES);
   		{
   			for (int i = 0; i < (int)base.vertex.size(); ++i)
   			{
@@ -244,7 +243,7 @@ int main(int argc, char* argv[])
 		// Polygon normals.
 
   		gxColor3ub(0, 0, 255);
-  		gxBegin(GL_LINES);
+  		gxBegin(GX_LINES);
   		{
   			for (int i = 0; i < (int)base.polygon.size(); ++i)
   			{

@@ -191,7 +191,7 @@ static void renderPoly(CPoly* poly, Color color)
 	}
 	Color fillColor = Color(polydata->lightness, polydata->lightness, polydata->lightness);
 	setColor(fillColor);
-	gxBegin(GL_TRIANGLE_FAN);
+	gxBegin(GX_TRIANGLE_FAN);
 	for (int i = 0; i < poly->edgeCount; ++i)
 	{
 		gxVertex2f(points[i * 2 + 0], points[i * 2 + 1]);

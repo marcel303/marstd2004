@@ -8,8 +8,6 @@ static CVector rotation;
 static CVector objectPosition;
 static CVector objectRotation;
 
-static void renderBsp(CBsp* bsp);
-static void renderPoly(CPoly* poly);
 static void renderMesh(CMesh& mesh, float fillOpacity, bool line);
 
 int main(int argc, char* argv[])
@@ -60,8 +58,7 @@ int main(int argc, char* argv[])
 
 		framework.beginDraw(0, 0, 0, 0);
 
-		glDepthFunc(GL_LEQUAL);
-		glEnable(GL_DEPTH_TEST);
+		pushDepthTest(true, DEPTH_LEQUAL);
 
 		SOpenGL::I().setupStandardMatrices(0.0, false);
 		
@@ -128,16 +125,16 @@ int main(int argc, char* argv[])
 		renderMesh(*mesh5, 1.f, false);
 		popBlend();
 		
-		glDepthMask(GL_FALSE);
+		pushDepthWrite(false);
 		pushBlend(BLEND_ALPHA);
 		renderMesh(*mesh1, .1f, true);
 		renderMesh(*mesh2, .1f, true);
 		renderMesh(*mesh3, .1f, true);
 		renderMesh(*mesh4, .1f, true);
 		popBlend();
-		glDepthMask(GL_TRUE);
+		popDepthWrite();
 		
-		glDisable(GL_DEPTH_TEST);
+		popDepthTest();
     		
 		delete mesh1;
 		delete mesh2;
@@ -167,65 +164,6 @@ int main(int argc, char* argv[])
 
 }
 
-static void doRenderBsp(CBsp* bsp)
-{
-
-	if (!bsp->child[0] || !bsp->child[1])
-	{
-		for (CPoly* poly = bsp->polyHead; poly; poly = poly->next)
-			renderPoly(poly);
-	}
-	else
-	{
-		float d = bsp->plane * positionV;
-		if (d >= 0.0)
-		{
-			doRenderBsp(bsp->child[1]);
-			doRenderBsp(bsp->child[0]);
-		}
-		else
-		{
-			doRenderBsp(bsp->child[0]);
-			doRenderBsp(bsp->child[1]);
-		}
-	}
-
-}
-
-static void renderBsp(CBsp* bsp)
-{
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	doRenderBsp(bsp);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	doRenderBsp(bsp);
-
-}
-
-static void renderPoly(CPoly* poly)
-{
-
-	float tmp[3];
-	for (int i = 0; i < 3; ++i)
-		tmp[i] = (poly->plane.normal[i] + 1.0) * 0.5;
-	setColorf(tmp[0], tmp[1], tmp[2]);
-
-	gxBegin(GL_TRIANGLE_FAN);
-	{
-
-		for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
-		{
-
-			gxVertex3f(edge->p[0], edge->p[1], edge->p[2]);
-
-		}
-
-	}
-	gxEnd();
-
-}
-
 static void renderMesh(CMesh& mesh, float fillOpacity, bool line)
 {
 
@@ -239,10 +177,8 @@ static void renderMesh(CMesh& mesh, float fillOpacity, bool line)
 				(poly->plane.normal[1] + 1.0) * 0.5,
 				(poly->plane.normal[2] + 1.0) * 0.5,
 				fillOpacity);
-
-			//gxColor3ub(63, 63, 63);
 			
-			gxBegin(GL_TRIANGLE_FAN);
+			gxBegin(GX_TRIANGLE_FAN);
 			{
 				for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
 				{
@@ -256,7 +192,7 @@ static void renderMesh(CMesh& mesh, float fillOpacity, bool line)
 		{
 			gxColor3ub(63, 63, 63);
 			
-			gxBegin(GL_LINES);
+			gxBegin(GX_LINES);
 			{
 				for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
 				{
@@ -269,7 +205,7 @@ static void renderMesh(CMesh& mesh, float fillOpacity, bool line)
         
         gxColor3ub(255, 255, 255);
         
-        gxBegin(GL_LINES);
+        gxBegin(GX_LINES);
         {
             for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
             {

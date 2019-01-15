@@ -1,3 +1,4 @@
+#include <GL/glew.h> // glPolygonMode
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
@@ -145,9 +146,7 @@ int main(int argc, char* argv[])
 		
 		framework.beginDraw(0, 0, 0, 0);
 
-		glDepthFunc(GL_LEQUAL);
-		glEnable(GL_DEPTH_TEST);
-		glDepthMask(0);
+		setDepthTest(true, DEPTH_LEQUAL, false);
 
 		SOpenGL::I().setupStandardMatrices(0.0);
 
@@ -234,7 +233,7 @@ static void renderPoly(CPoly* poly)
 		tmp[i] = (poly->plane.normal[i] + 1.0) * 0.5;
 	setColorf(tmp[0], tmp[1], tmp[2], .54f);
 
-	gxBegin(GL_TRIANGLE_FAN);
+	gxBegin(GX_TRIANGLE_FAN);
 	{
 
 		for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)

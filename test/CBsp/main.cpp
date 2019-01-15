@@ -1,3 +1,4 @@
+#include <GL/glew.h> // glPolygonMode
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
@@ -109,17 +110,14 @@ TODO: Calculate portals.
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		
-   		glEnable(GL_DEPTH_TEST);
-   		glDepthFunc(GL_ALWAYS);
+		setDepthTest(true, DEPTH_ALWAYS, true);
    		
 		render(bsp);
 		
 		gxPushMatrix();
 		gxTranslatef(point[0], point[1], point[2]);
 
-		glDepthFunc(GL_GEQUAL);
-		glEnable(GL_DEPTH_TEST);
-		glDepthMask(0);
+		setDepthTest(true, DEPTH_GEQUAL, false);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		pushBlend(BLEND_ALPHA);
@@ -127,9 +125,7 @@ TODO: Calculate portals.
 		popBlend();
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		
-		glDepthFunc(GL_LEQUAL);
-		glEnable(GL_DEPTH_TEST);
-		glDepthMask(1);
+		setDepthTest(true, DEPTH_LEQUAL, true);
 		
 		render(pointMesh, 1.f);
 		
@@ -188,7 +184,7 @@ static void render(CBsp& bsp)
 				(poly->plane.normal[1] + .4f) / 1.4f,
 				(poly->plane.normal[2] + .4f) / 1.4f);
 		
-		gxBegin(GL_TRIANGLE_FAN);
+		gxBegin(GX_TRIANGLE_FAN);
 		{
 
 			for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
@@ -211,7 +207,7 @@ static void render(CCompiledMesh& mesh, float opacity)
 	for (int i = 0; i < (int)mesh.polygon.size(); ++i)
 	{
 
-		gxBegin(GL_TRIANGLE_FAN);
+		gxBegin(GX_TRIANGLE_FAN);
 		{
 
 			for (int j = 0; j < (int)mesh.polygon[i].vertex.size(); ++j)
