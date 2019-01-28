@@ -1,4 +1,4 @@
-#include <GL/glew.h> // glPolygonMode, GL_MODELVIEW
+#include <GL/glew.h> // glBlendFunc
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 			
 		}
 	
-		framework.beginDraw(100, 100, 100, 0);
+		framework.beginDraw(40, 40, 40, 0);
 		
 		setDepthTest(true, DEPTH_LEQUAL, false);
 		
@@ -125,13 +125,13 @@ int main(int argc, char* argv[])
 		
 		SOpenGL::I().setupStandardMatrices();
 		
-		gxRotatef(time / 1.123, 1.f, 0.f, 0.f);
-		gxRotatef(time / 1.234, 0.f, 1.f, 0.f);
-		gxRotatef(time / 1.345, 0.f, 0.f, 1.f);
+		gxRotatef(time / 1.123 * 3.0, 1.f, 0.f, 0.f);
+		gxRotatef(time / 1.234 * 3.0, 0.f, 1.f, 0.f);
+		gxRotatef(time / 1.345 * 3.0, 0.f, 0.f, 1.f);
 
 		float matrix[16];
-		gxGetMatrixf(GL_MODELVIEW, matrix);
-		gxMatrixMode(GL_MODELVIEW);
+		gxGetMatrixf(GX_MODELVIEW, matrix);
+		gxMatrixMode(GX_MODELVIEW);
 		gxLoadIdentity();
 		
 		#if 0
@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 
 		#if 1
   		
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		pushWireframe(true);
 		
 		#endif
 		
@@ -279,9 +279,15 @@ int main(int argc, char* argv[])
   		}
   		gxEnd();
 		
+		#if 1
+		
+		popWireframe();
+		
+		#endif
+		
 		framework.endDraw();
 		
-		time += 1.f / 10.f;
+		time += framework.timeStep;
 	
 	}
 

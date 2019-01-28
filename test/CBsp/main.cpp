@@ -1,4 +1,3 @@
-#include <GL/glew.h> // glPolygonMode
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
@@ -65,9 +64,9 @@ TODO: Calculate portals.
 		camera.tick(framework.timeStep, true);
 		position = CVector(camera.position[0], camera.position[1], camera.position[2]);
 		
-		point[0] = sin(time / 10.111) * 0.75;
-		point[1] = sin(time / 10.333) * 0.75;
-		point[2] = sin(time / 10.555) * 0.75;
+		point[0] = sin(time / 1.111) * 0.75;
+		point[1] = sin(time / 1.333) * 0.75;
+		point[2] = sin(time / 1.555) * 0.75;
 
   		if (keyboard.isDown(SDLK_r))
   		{
@@ -105,25 +104,24 @@ TODO: Calculate portals.
 		
 		camera.pushViewMatrix();
 
-		if (keyboard.isDown(SDLK_w))
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		else
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		
-		setDepthTest(true, DEPTH_ALWAYS, true);
-   		
-		render(bsp);
+		pushWireframe(keyboard.isDown(SDLK_w));
+		{
+			setDepthTest(true, DEPTH_ALWAYS, true);
+			
+			render(bsp);
+		}
+		popWireframe();
 		
 		gxPushMatrix();
 		gxTranslatef(point[0], point[1], point[2]);
 
 		setDepthTest(true, DEPTH_GEQUAL, false);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		pushWireframe(true);
 		pushBlend(BLEND_ALPHA);
 		render(pointMesh, .2f);
 		popBlend();
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		popWireframe();
 		
 		setDepthTest(true, DEPTH_LEQUAL, true);
 		
@@ -135,7 +133,7 @@ TODO: Calculate portals.
 
 		framework.endDraw();
 
-		time += 1.0 / 10.0;
+		time += framework.timeStep;
 
 	}
 

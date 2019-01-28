@@ -1,4 +1,3 @@
-#include <GL/glew.h> // glPolygonMode
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
@@ -217,11 +216,13 @@ static void doRenderBsp(CBsp* bsp)
 static void renderBsp(CBsp* bsp)
 {
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	pushWireframe(true);
 	doRenderBsp(bsp);
+	popWireframe();
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	pushWireframe(false);
 	doRenderBsp(bsp);
+	popWireframe();
 
 }
 

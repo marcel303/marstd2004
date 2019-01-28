@@ -2,7 +2,6 @@
 // CIsosurface text.
 //////////////////////////////////////////////////////////////////////
 
-#include <GL/glew.h> // glPolygonMode, GL_CULL_FACE
 #include <math.h>
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
@@ -165,6 +164,7 @@ int main(int argc, char* argv[])
 		setDepthTest(true, DEPTH_LESS);
 		setBlend(BLEND_OPAQUE);
 		
+	#if 0 // todo : reimplement lighting
 		// Setup and enable lighting.
 
 		float l_direction[4][4] =
@@ -183,7 +183,6 @@ int main(int argc, char* argv[])
 			{ 2.0, 2.0, 2.0, 1.0 }
 		};
 	
-	#if 0 // todo
 		for (int i  =0; i < 4; ++i)
 		{
    			if (0)
@@ -215,12 +214,14 @@ int main(int argc, char* argv[])
 		glEnable(GL_TEXTURE_GEN_T);
 	#endif
 	
+	#if 0
 		if (0)
 		{
 			// Cannot enable culling while mirroring too, because normals aren't mirrored as well..		
 			glCullFace(GL_FRONT);		
 			glEnable(GL_CULL_FACE);
 		}
+	#endif
 		
 		CIsosurfaceVertex v[600];		// Vertex buffer.
 		field.output(200, v, draw_triangles);	// Render triangles using specified callback function.
@@ -287,10 +288,7 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 
 	// Use line mode?
 	
-	if (keyboard.isDown(SDLK_l))
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else		
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);		
+	pushWireframe(keyboard.isDown(SDLK_l));
 	
 #if 1
 
@@ -364,5 +362,7 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 	}
 	
 #endif
+
+	popWireframe();
 	
 }
