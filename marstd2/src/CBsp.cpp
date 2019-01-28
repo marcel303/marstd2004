@@ -243,6 +243,8 @@ static void INTERP(CEdge* l1, CEdge* l2, float t, CPoly* polyFront, CPoly* polyB
 		for (int j = 0; j < VERTEX_TEX_COMPONENTS; ++j)
 			DO_INTERP(t[i][j]);
 
+	#undef DO_INTERP
+	
 }
 
 void CBsp::split(CPoly* a_p)
