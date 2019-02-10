@@ -1,3 +1,4 @@
-global_group marstd2004
+push_group marstd2004
 	add marstd2
 	add test
+pop_group
