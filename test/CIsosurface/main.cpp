@@ -14,6 +14,9 @@
 
 static void draw_triangles(int num, CIsosurfaceVertex* v);
 
+static GxTextureId envmap = 0;
+static GxTextureId texmap = 0;
+
 int main(int argc, char* argv[])
 {
 
@@ -24,20 +27,14 @@ int main(int argc, char* argv[])
 //--------------------------------------------------------------------
 // Initialize system.
 
-#if 0
-	allegro_message("MarSTD\n------\nCIsosurface & CIsosurfaceMetaball classes example.\nPress L to render as wireframe.\nPress I to invert metaball energy values.\nPress mouse button 1 & 2 to change treshold.\n------\nLogic execution rate is currently equal to the number of frames per second it renders.\nIf the example appears to execute too fast, enable vsync in your display properties for OpenGL applications.\n------\nMarcel Smit, 2003.");
-
-	if (install_timer() < 0 || install_keyboard() < 0 || install_mouse() < 0)
-	{
-		allegro_message("Error: unable to install system drivers.");
-		return -1;
-	}
-#endif
+	SDL_ShowSimpleMessageBox(0, "Instruction", "MarSTD\n------\nCIsosurface & CIsosurfaceMetaball classes example.\nPress L to render as wireframe.\nPress I to invert metaball energy values.\nPress mouse button 1 & 2 to change treshold.\n------\nLogic execution rate is currently equal to the number of frames per second it renders.\nIf the example appears to execute too fast, enable vsync in your display properties for OpenGL applications.\n------\nMarcel Smit, 2003.", nullptr);
 	
 //--------------------------------------------------------------------
 // Open an OpenGL window.
 
 	framework.enableDepthBuffer = true;
+	
+	framework.enableRealTimeEditing = true;
 	
 	if (!framework.init(800, 600))
 	{
@@ -59,8 +56,8 @@ int main(int argc, char* argv[])
 	
 	// Textures.
 	
-	GxTextureId envmap = getTexture("data/envmap.bmp");
-	GxTextureId texmap = getTexture("data/texmap.bmp");
+	envmap = getTexture("data/envmap.bmp");
+	texmap = getTexture("data/texmap.bmp");
  	
 //--------------------------------------------------------------------
 // Main loop.
@@ -202,17 +199,6 @@ int main(int argc, char* argv[])
 		gxTranslatef(0.0, 0.0, 2.0);
 		gxTranslatef(0.0, (sin(t * 0.003) - 0.5) / 3.0, 0.0);
 		gxRotatef(ry / 1.111, 0.0, 1.0, 0.0);
-
-		// Enable sphere mapping. This will give a nice reflective effect.
-		
-		gxSetTexture(envmap);
-		
-	#if 0 // todo
-		glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-		glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);		
-		glEnable(GL_TEXTURE_GEN_S);
-		glEnable(GL_TEXTURE_GEN_T);
-	#endif
 	
 	#if 0
 		if (0)
@@ -234,8 +220,6 @@ int main(int argc, char* argv[])
 
 	// todo
 		//glDisable(GL_LIGHTING);
-		//glDisable(GL_TEXTURE_GEN_S);
-		//glDisable(GL_TEXTURE_GEN_T);
 
 		pushBlend(BLEND_ALPHA);
 		gxColor4f(1.0, 1.0, 1.0, 0.5);
@@ -256,13 +240,13 @@ int main(int argc, char* argv[])
 		gxEnd();
 	
 	// todo
-		//glEnable(GL_TEXTURE_GEN_S);
-		//glEnable(GL_TEXTURE_GEN_T);
 		//glEnable(GL_LIGHTING);
 	
 		popBlend();
 		
 		popDepthWrite();
+		
+		gxSetTexture(0);
  		
 //--------------------------------------------------------------------
 // Make back buffer visible.
@@ -290,70 +274,46 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 	
 	pushWireframe(keyboard.isDown(SDLK_l));
 	
-#if 1
+	// Enable sphere mapping. This will give a nice reflective effect.
+	
+	Shader shader("data/envmap");
+	setShader(shader);
+	shader.setTexture("envmap", 0, envmap, true);
+	
+	// Draw vertex arrays.
+	
+	gxBegin(GX_TRIANGLES);
+	{
+		for (int i = 0; i < num * 3; ++i)
+		{
+			gxNormal3fv(v[i].n);
+			gxVertex3fv(v[i].p);
+		}
+	}
+	gxEnd();
+	
+	// Mirror y coordinate.
+	
+	for (int i = 0; i < num * 3; ++i)
+	{
+	
+		v[i].p[1] = -v[i].p[1] - 2.0;
+	
+	}
+	
+	// Draw vertex arrays a second time.
+	
+	gxBegin(GX_TRIANGLES);
+	{
+		for (int i = 0; i < num * 3; ++i)
+		{
+			gxNormal3fv(v[i].n);
+			gxVertex3fv(v[i].p);
+		}
+	}
+	gxEnd();
 
-	// Draw vertex arrays.
-	
-	gxBegin(GX_TRIANGLES);
-	{
-		for (int i = 0; i < num * 3; ++i)
-		{
-			gxTexCoord2f(v[i].n[0], v[i].n[1]); // fixme : sphere map it
-			
-			gxNormal3fv(v[i].n);
-			gxVertex3fv(v[i].p);
-		}
-	}
-	gxEnd();
-	
-	// Mirror y coordinate.
-	
-	for (int i = 0; i < num * 3; ++i)
-	{
-	
-		v[i].p[1] = -v[i].p[1] - 2.0;
-	
-	}
-	
-	// Draw vertex arrays a second time.
-	
-	gxBegin(GX_TRIANGLES);
-	{
-		for (int i = 0; i < num * 3; ++i)
-		{
-			gxTexCoord2f(v[i].n[0], v[i].n[1]); // fixme : sphere map it
-			
-			gxNormal3fv(v[i].n);
-			gxVertex3fv(v[i].p);
-		}
-	}
-	gxEnd();
-	
-#else
-	
-	// Use vertex pointers to draw faster.
-	
-	glVertexPointer(3, GL_FLOAT, sizeof(CIsosurfaceVertex), v->p);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glNormalPointer(GL_FLOAT, sizeof(CIsosurfaceVertex), v->n);
-	glEnableClientState(GL_NORMAL_ARRAY);	
-	
-	// Draw vertex arrays.
-	
-	glDrawArrays(GL_TRIANGLES, 0, num * 3);
-	
-	// Mirror y coordinate.
-	
-	for (int i = 0; i < num * 3; ++i)
-	{
-	
-		v[i].p[1] = -v[i].p[1] - 2.0;
-	
-	}
-	
-	// Draw vertex arrays a second time.
-	
-	glDrawArrays(GL_TRIANGLES, 0, num * 3);
+#if 0
 
 	if (0)
 	{
@@ -362,6 +322,8 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 	}
 	
 #endif
+
+	clearShader();
 
 	popWireframe();
 	
