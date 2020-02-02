@@ -1,4 +1,3 @@
-#include <GL/glew.h> // glBlendFunc
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
@@ -119,9 +118,7 @@ int main(int argc, char* argv[])
 		framework.beginDraw(40, 40, 40, 0);
 		
 		setDepthTest(true, DEPTH_LEQUAL, false);
-		
-		glBlendFunc(GL_SRC_COLOR, GL_DST_COLOR);
-		glEnable(GL_BLEND);
+		setBlend(BLEND_MAX);
 		
 		SOpenGL::I().setupStandardMatrices();
 		
