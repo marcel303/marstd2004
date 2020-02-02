@@ -1,6 +1,7 @@
 #include "../Util/SOpenGL.h"
 #include "marstd.h"
 #include "framework.h"
+#include <SDL2/SDL_messagebox.h>
 
 static CVector rotationV;
 static CVector positionV;

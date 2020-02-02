@@ -6,6 +6,7 @@
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
+#include <SDL2/SDL_messagebox.h>
 
 //////////////////////////////////////////////////////////////////////
 // Could also use isosurfaces to do csg add, substract, xor, etc like in some raytracers.

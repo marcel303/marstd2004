@@ -1,6 +1,7 @@
 #include "marstd.h"
 #include "../Util/SOpenGL.h"
 #include "framework.h"
+#include <SDL2/SDL_messagebox.h>
 
 static CVector position;
 
@@ -22,6 +23,7 @@ int main(int argc, char* argv[])
 		exit(-1);
 
 #if 0
+// todo : SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, 
 	allegro_message("\n
 BSP tree class test app.
 ------------------------
