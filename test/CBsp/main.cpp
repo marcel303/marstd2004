@@ -13,28 +13,22 @@ static void render(CCompiledMesh& mesh, float opacity);
 int main(int argc, char* argv[])
 {
 
-#if defined(CHIBI_RESOURCE_PATH)
-	changeDirectory(CHIBI_RESOURCE_PATH);
-#endif
+	setupPaths(CHIBI_RESOURCE_PATHS);
 
 	framework.enableDepthBuffer = true;
 	
 	if (!framework.init(640, 480))
 		exit(-1);
 
-#if 0
-// todo : SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, 
-	allegro_message("\n
-BSP tree class test app.
+SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Instruction",
+R"TEXT(BSP tree class test app.
 ------------------------
 This application will create a 'random' BSP tree anytime you press 'r'.
 Use the mouse to rotate, cursor keys + A and Z to move.
 This app doesn't use the z-buffer for rendering the object. :)
 
 Currently the BSP compiler compiles just about any polygon soup without problems... small epsilon values will result in FPU rounding errors to occur though.
-TODO: Calculate portals.
-");
-#endif
+TODO: Calculate portals.)TEXT", nullptr);
 
 	CBsp bsp;
 	CGeomBuilder::I().cube(bsp);

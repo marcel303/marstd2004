@@ -13,6 +13,8 @@ static void renderPoly(CPoly* poly);
 int main(int argc, char* argv[])
 {
 
+	setupPaths(CHIBI_RESOURCE_PATHS);
+	
 	framework.enableDepthBuffer = true;
 	
 	if (!framework.init(640, 480))

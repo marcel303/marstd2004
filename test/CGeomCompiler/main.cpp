@@ -8,9 +8,7 @@ static void generateTextureCoordinates(CPoly& poly);
 int main(int argc, char* argv[])
 {
 
-#if defined(CHIBI_RESOURCE_PATH)
-	changeDirectory(CHIBI_RESOURCE_PATH);
-#endif
+	setupPaths(CHIBI_RESOURCE_PATHS);
 
 	framework.enableDepthBuffer = true;
 	

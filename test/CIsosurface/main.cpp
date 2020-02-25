@@ -21,9 +21,7 @@ static GxTextureId texmap = 0;
 int main(int argc, char* argv[])
 {
 
-#if defined(CHIBI_RESOURCE_PATH)
-	changeDirectory(CHIBI_RESOURCE_PATH);
-#endif
+	setupPaths(CHIBI_RESOURCE_PATHS);
 
 //--------------------------------------------------------------------
 // Initialize system.
@@ -181,7 +179,7 @@ int main(int argc, char* argv[])
 			{ 2.0, 2.0, 2.0, 1.0 }
 		};
 	
-		for (int i  =0; i < 4; ++i)
+		for (int i = 0; i < 4; ++i)
 		{
    			if (0)
 				for (int j = 0; j < 3; ++j)
