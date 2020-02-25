@@ -286,6 +286,14 @@ class CVector
     	MASSERT(index >= 0 && index <= 3);
 		return v[index];
 	}
+ 	/**
+ 	 * Returns component[index].
+	 */
+	const float& operator[](int index) const
+    {
+    	MASSERT(index >= 0 && index <= 3);
+		return v[index];
+	}
 	/**
      * Returns a float* pointer to the internal representation of the vector.
      */
