@@ -33,3 +33,9 @@ app marstd2-CIsosurface
 	depend_library marstd2
 	resource_path CIsosurface
 	add_files CIsosurface/main.cpp
+
+app marstd2-CPoly
+	depend_library framework
+	depend_library marstd2
+	resource_path CPoly
+	add_files CPoly/main.cpp

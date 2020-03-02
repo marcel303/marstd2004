@@ -1,25 +1,19 @@
-#include <allegro.h>
+#include "framework.h"
 #include "marstd.cpp"
 
-static BITMAP* colourmap;
+static const int SCREEN_W = 400;
+static const int SCREEN_H = 400;
 
-static void renderPoly(CPoly* poly, int colour = -1);
+static void renderPoly(CPoly* poly, Color * colour = nullptr);
 static bool insidePoly(CPoly* poly, int x, int y);
 
 int main(int argc, char* argv[])
 {
 
-	allegro_init();
+	setupPaths(CHIBI_RESOURCE_PATHS);
 	
-	install_keyboard();
-	install_mouse();
+	framework.init(SCREEN_W, SCREEN_H);
 	
-	set_color_depth(32);
-
-	set_gfx_mode(GFX_AUTODETECT_WINDOWED, 400, 400, 0, 0);
-
-	colourmap = create_bitmap(SCREEN_W, SCREEN_H);
-
 	CVector screenMid = CVector(SCREEN_W / 2.0, SCREEN_H / 2.0, 0.0);
 
 	CPoly* poly = new CPoly;
@@ -75,84 +69,96 @@ int main(int argc, char* argv[])
 
 	clipPoly->clip(poly, inside, outside);
 
-	show_mouse(screen);
-
-	while (!key[KEY_ESC])
+	while (!keyboard.wentDown(SDLK_ESCAPE))
 	{
 
+		framework.process();
+		
 		// Render.
 
-		clear(colourmap);
+		framework.beginDraw(0, 0, 0, 0);
 
+		setFont("engine/fonts/Roboto-Regular.ttf");
+		
 		int line = 0;
+		int text_height = 18;
 
-		textprintf_ex(colourmap, font, 0, line++ * text_height(font), makecol(255, 255, 255), makecol(0, 0, 0), "Press Q to hide original polygon.");
-		if (!key[KEY_Q])
+		setColor(colorWhite);
+		drawText(0, line++ * text_height, 12, +1, +1, "Press Q to hide original polygon.");
+		if (!keyboard.isDown(SDLK_q))
 			renderPoly(poly);
 
-		textprintf_ex(colourmap, font, 0, line++ * text_height(font), makecol(255, 255, 255), makecol(0, 0, 0), "Press W to render split polygon.");
-		if (key[KEY_W])
+		setColor(colorWhite);
+		drawText(0, line++ * text_height, 12, +1, +1, "Press W to render split polygon.");
+		if (keyboard.isDown(SDLK_w))
 		{
 			renderPoly(front);
 			renderPoly(back);
 		}
 
-		textprintf_ex(colourmap, font, 0, line++ * text_height(font), makecol(255, 255, 255), makecol(0, 0, 0), "Press E to render clipped polygon.");
-		if (key[KEY_E])
+		setColor(colorWhite);
+		drawText(0, line++ * text_height, 12, +1, +1, "Press E to render clipped polygon.");
+		if (keyboard.isDown(SDLK_e))
 			renderPoly(clip);
 
-		textprintf_ex(colourmap, font, 0, line++ * text_height(font), makecol(255, 255, 255), makecol(0, 0, 0), "Press R to render clipping polygon.");
-		if (key[KEY_R])
+		setColor(colorWhite);
+		drawText(0, line++ * text_height, 12, +1, +1, "Press R to render clipping polygon.");
+		if (keyboard.isDown(SDLK_r))
 			renderPoly(clipPoly);
 
-		textprintf_ex(colourmap, font, 0, line++ * text_height(font), makecol(255, 255, 255), makecol(0, 0, 0), "Press T to render inside polygon.");
-		if (key[KEY_T])
+		setColor(colorWhite);
+		drawText(0, line++ * text_height, 12, +1, +1, "Press T to render inside polygon.");
+		if (keyboard.isDown(SDLK_t))
 			renderPoly(inside);
 
-		textprintf_ex(colourmap, font, 0, line++ * text_height(font), makecol(255, 255, 255), makecol(0, 0, 0), "Press Y to render outside polygon.");
-		if (key[KEY_Y])
+		setColor(colorWhite);
+		drawText(0, line++ * text_height, 12, +1, +1, "Press Y to render outside polygon.");
+		if (keyboard.isDown(SDLK_y))
 			for (CPoly* poly = outside->polyHead; poly; poly = poly->next)
 				renderPoly(poly);
 
-		vsync();
-
-		scare_mouse();
-
-		blit(colourmap, screen, 0, 0, 0, 0, colourmap->w, colourmap->h);
-
-		unscare_mouse();
-
+		framework.endDraw();
+		
 	}
 
-	destroy_bitmap(colourmap);
+	framework.shutdown();
 
 	return 0;
 
 }
-END_OF_MAIN();
 
-static void renderPoly(CPoly* poly, int colour)
+static void drawHqLine(float x1, float y1, float x2, float y2)
 {
 
-	if (colour == -1)
-		colour = makecol(255, 255, 255);
-
-	int* points = new int[poly->edgeCount * 2];
-	int point = 0;
-	for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
+	hqBegin(HQ_LINES);
 	{
-		points[point * 2 + 0] = (int)edge->p[0];
-		points[point * 2 + 1] = (int)edge->p[1];
-		point++;
+	
+		hqLine(x1, y1, 1.f, x2, y2, 1.f);
+	
 	}
-	int fillColour = insidePoly(poly, mouse_x, mouse_y) ? makecol(127, 127, 127) : makecol(63, 63, 63);
-	polygon(colourmap, poly->edgeCount, points, fillColour);
-	delete[] points;
+	hqEnd();
+	
+}
+
+static void renderPoly(CPoly* poly, Color * colour)
+{
+
+	if (colour == nullptr)
+		colour = &colorWhite;
+
+	bool isInsidePoly = insidePoly(poly, mouse.x, mouse.y);
+	
+	Color fillColour = isInsidePoly ? Color(127, 127, 127) : Color(63, 63, 63);
+	setColor(fillColour);
+	gxBegin(GX_TRIANGLE_FAN);
+	for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
+		gxVertex2f(edge->p[0], edge->p[1]);
+	gxEnd();
 
 	for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
 	{
 
-		const float normalSize = 50.0;
+		const float normalSize = isInsidePoly ? 40.0 : 50.0;
 
 		float edgeMid[2];
 
@@ -161,15 +167,30 @@ static void renderPoly(CPoly* poly, int colour)
 
 		// Vertex to vertex.
 
-		line(colourmap, (int)edge->p[0], (int)edge->p[1], (int)edge->edge2->p[0], (int)edge->edge2->p[1], colour);
+		setColor(*colour);
+		drawHqLine(
+			edge->p[0],
+			edge->p[1],
+			edge->edge2->p[0],
+			edge->edge2->p[1]);
 
 		// Plane || edge.
 
-		line(colourmap, (int)edgeMid[0], (int)edgeMid[1], int(edgeMid[0] + edge->edge_plane.normal[0] * normalSize), int(edgeMid[1] + edge->edge_plane.normal[1] * normalSize), makecol(0, 255, 0));
+		setColor(Color(0, 255, 0));
+		drawHqLine(
+			edgeMid[0],
+			edgeMid[1],
+			edgeMid[0] + edge->edge_plane.normal[0] * normalSize,
+			edgeMid[1] + edge->edge_plane.normal[1] * normalSize);
 
 		// Plane _|_ edge.
 
-		line(colourmap, (int)edgeMid[0], (int)edgeMid[1], int(edgeMid[0] + edge->plane.normal[0] * normalSize), int(edgeMid[1] + edge->plane.normal[1] * normalSize), makecol(255, 255, 0));
+		setColor(Color(255, 255, 0));
+		drawHqLine(
+			edgeMid[0],
+			edgeMid[1],
+			edgeMid[0] + edge->plane.normal[0] * normalSize,
+			edgeMid[1] + edge->plane.normal[1] * normalSize);
 
 	}
 
