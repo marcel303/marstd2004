@@ -92,7 +92,7 @@ class CVector
  	 */
 	float size()
     {
-		return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+		return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 	}  
  	/**
      * @return The magnitude of the vector squared. This is faster than size() because it doesn't do a sqrt().
@@ -108,7 +108,7 @@ class CVector
 	 */
 	void normalize()
     {
-		float size = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+		float size = sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 		MASSERT(size != 0.0);		
 		if (size == 0.0)
 		{
