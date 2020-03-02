@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
 	
 	if (!framework.init(800, 600))
 	{
-		//allegro_message("Error: unable to set OpenGL graphics mode.");
 		return -1;
 	}
 	
@@ -198,15 +197,6 @@ int main(int argc, char* argv[])
 		gxTranslatef(0.0, 0.0, 2.0);
 		gxTranslatef(0.0, (sin(t * 0.003) - 0.5) / 3.0, 0.0);
 		gxRotatef(ry / 1.111, 0.0, 1.0, 0.0);
-	
-	#if 0
-		if (0)
-		{
-			// Cannot enable culling while mirroring too, because normals aren't mirrored as well..		
-			glCullFace(GL_FRONT);		
-			glEnable(GL_CULL_FACE);
-		}
-	#endif
 		
 		CIsosurfaceVertex v[600];		// Vertex buffer.
 		field.output(200, v, draw_triangles);	// Render triangles using specified callback function.
@@ -216,9 +206,6 @@ int main(int argc, char* argv[])
 		gxSetTexture(texmap);
   	
 		pushDepthWrite(false);		// We disable writing to the depth buffer. When drawing multiple unsorted transparent surfaces, you will need to do this or suffer the consequences.
-
-	// todo
-		//glDisable(GL_LIGHTING);
 
 		pushBlend(BLEND_ALPHA);
 		gxColor4f(1.0, 1.0, 1.0, 0.5);
@@ -237,9 +224,6 @@ int main(int argc, char* argv[])
 			
 		}
 		gxEnd();
-	
-	// todo
-		//glEnable(GL_LIGHTING);
 	
 		popBlend();
 		
@@ -297,6 +281,7 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 	{
 	
 		v[i].p[1] = -v[i].p[1] - 2.0;
+		v[i].n[1] = -v[i].n[1];
 	
 	}
 	
@@ -311,16 +296,6 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 		}
 	}
 	gxEnd();
-
-#if 0
-
-	if (0)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawArrays(GL_TRIANGLES, 0, num * 3);
-	}
-	
-#endif
 
 	clearShader();
 
