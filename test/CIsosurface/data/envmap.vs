@@ -1,6 +1,7 @@
 include engine/ShaderVS.txt
 
-shader_out vec2 texcoord;
+shader_out vec2 v_texcoord;
+shader_out vec3 v_color;
 
 vec2 texgen_spheremap(vec3 view_position, vec3 view_normal)
 {
@@ -32,5 +33,13 @@ void main()
 	vec4 view_position = objectToView(unpackPosition());
 	vec3 view_normal = objectToView3(unpackNormal().xyz);
 	
-	texcoord = texgen_spheremap(view_position.xyz, view_normal);
+	v_texcoord = texgen_spheremap(view_position.xyz, view_normal);
+
+	//
+
+	vec3 lightColor = vec3(1.0);
+	vec3 lightDirection = normalize(vec3(0, 1, -2));
+	float lightIntensity = max(0.0, dot(lightDirection, view_normal));
+	
+	v_color = lightColor * lightIntensity;
 }

@@ -128,11 +128,7 @@ int main(int argc, char* argv[])
 				
 				}
 				
-		#endif				
-		
-		// We will be using the normal vectors, so calculate them.
-
-		field.calculateNormals();
+		#endif
 
 		// Invert?
 		
@@ -142,7 +138,11 @@ int main(int argc, char* argv[])
 				for (int j = 0; j < field.sy; ++j)
 					for (int k = 0; k < field.sz; ++k)
 						field.v[i][j][k].e = -field.v[i][j][k].e;
-		}		
+		}
+		
+		// We will be using the normal vectors, so calculate them.
+
+		field.calculateNormals();
 
 		t += 1.0;
 		ry += 0.3;
@@ -204,6 +204,7 @@ int main(int argc, char* argv[])
 		// Draw floor.
 	
 		gxSetTexture(texmap);
+		gxSetTextureSampler(GX_SAMPLE_LINEAR, true);
   	
 		pushDepthWrite(false);		// We disable writing to the depth buffer. When drawing multiple unsorted transparent surfaces, you will need to do this or suffer the consequences.
 
@@ -261,7 +262,7 @@ static void draw_triangles(int num, CIsosurfaceVertex* v)
 	
 	Shader shader("data/envmap");
 	setShader(shader);
-	shader.setTexture("envmap", 0, envmap, true);
+	shader.setTexture("envmap", 0, envmap, true, true);
 	
 	// Draw vertex arrays.
 	
