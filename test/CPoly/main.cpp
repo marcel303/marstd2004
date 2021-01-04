@@ -158,7 +158,7 @@ static void renderPoly(CPoly* poly, Color * colour)
 	for (CEdge* edge = poly->edgeHead; edge; edge = edge->next)
 	{
 
-		const float normalSize = isInsidePoly ? 40.0 : 50.0;
+		const float normalSize = (isInsidePoly && mouse.isDown(BUTTON_LEFT)) ? 40.0 : 50.0;
 
 		float edgeMid[2];
 
